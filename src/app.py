@@ -9,13 +9,13 @@ from datetime import datetime, date
 import os
 
 from database_manager import DatabaseManager
-from disaster_manager import DisasterManager
-from camp_manager import CampManager
-from resource_manager import ResourceManager
-from volunteer_manager import VolunteerManager
-from donation_manager import DonationManager
+from managers.disaster_manager import DisasterManager
+from managers.camp_manager import CampManager
+from managers.resource_manager import ResourceManager
+from managers.volunteer_manager import VolunteerManager
+from managers.donation_manager import DonationManager
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='../templates', static_folder='../static')
 app.secret_key = 'your-secret-key-change-this'
 
 # Initialize database and managers

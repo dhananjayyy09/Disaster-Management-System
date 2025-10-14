@@ -11,11 +11,11 @@ import pandas as pd
 from datetime import datetime, date
 
 from database_manager import DatabaseManager
-from disaster_manager import DisasterManager
-from camp_manager import CampManager
-from resource_manager import ResourceManager
-from volunteer_manager import VolunteerManager
-from donation_manager import DonationManager
+from managers.disaster_manager import DisasterManager
+from managers.camp_manager import CampManager
+from managers.resource_manager import ResourceManager
+from managers.volunteer_manager import VolunteerManager
+from managers.donation_manager import DonationManager
 
 class DisasterReliefApp:
     def __init__(self, root):
