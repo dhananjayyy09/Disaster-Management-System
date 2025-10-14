@@ -1,0 +1,361 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Disaster Relief Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="display-4 text-primary mb-4">
+            <i class="fas fa-tachometer-alt me-3"></i>Dashboard
+        </h1>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="card bg-danger text-white h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                <h4 class="card-title">{{ summary.active_disasters or 0 }}</h4>
+                <p class="card-text">Active Disasters</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="card bg-info text-white h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-campground fa-3x mb-3"></i>
+                <h4 class="card-title">{{ summary.active_camps or 0 }}</h4>
+                <p class="card-text">Active Camps</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="card bg-success text-white h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-users fa-3x mb-3"></i>
+                <h4 class="card-title">{{ summary.available_volunteers or 0 }}</h4>
+                <p class="card-text">Available Volunteers</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="card bg-warning text-white h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-bed fa-3x mb-3"></i>
+                <h4 class="card-title">{{ summary.total_occupancy or 0 }}</h4>
+                <p class="card-text">Total Occupancy</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="card bg-secondary text-white h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-exclamation-circle fa-3x mb-3"></i>
+                <h4 class="card-title">{{ summary.critical_shortages or 0 }}</h4>
+                <p class="card-text">Critical Shortages</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="card bg-primary text-white h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-gift fa-3x mb-3"></i>
+                <h4 class="card-title">{{ donation_stats.total_donations or 0 }}</h4>
+                <p class="card-text">Total Donations</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row mb-4">
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>Disasters by Type
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="disasterTypesChart" style="height: 300px;"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Resource Shortages
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="resourceShortagesChart" style="height: 300px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-doughnut me-2"></i>Volunteer Status
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="volunteerStatusChart" style="height: 300px;"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-line me-2"></i>Donations by Type
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="donationTypesChart" style="height: 300px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Data Tables -->
+<div class="row">
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Recent Disasters
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_disasters %}
+                    <div class="list-group list-group-flush">
+                        {% for disaster in recent_disasters %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">{{ disaster.disaster_name }}</h6>
+                                <small class="text-muted">{{ disaster.location }} - {{ disaster.disaster_type }}</small>
+                            </div>
+                            <span class="badge bg-{{ 'danger' if disaster.severity == 'Critical' else 'warning' if disaster.severity == 'High' else 'info' if disaster.severity == 'Medium' else 'success' }}">
+                                {{ disaster.severity }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">No disasters recorded yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-campground me-2"></i>Relief Camps
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_camps %}
+                    <div class="list-group list-group-flush">
+                        {% for camp in recent_camps %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">{{ camp.camp_name }}</h6>
+                                <small class="text-muted">{{ camp.location }} - {{ camp.disaster_name }}</small>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold">{{ camp.current_occupancy }}/{{ camp.capacity }}</div>
+                                <small class="text-muted">{{ "%.1f"|format(camp.occupancy_percentage) }}%</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">No camps recorded yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-gift me-2"></i>Recent Donations
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_donations %}
+                    <div class="list-group list-group-flush">
+                        {% for donation in recent_donations %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">{{ donation.donor_name }}</h6>
+                                <small class="text-muted">{{ donation.quantity_donated }} {{ donation.unit }} {{ donation.type_name }}</small>
+                            </div>
+                            <span class="badge bg-{{ 'success' if donation.status == 'Received' else 'warning' if donation.status == 'Pending' else 'info' if donation.status == 'Allocated' else 'secondary' }}">
+                                {{ donation.status }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">No donations recorded yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-bolt me-2"></i>Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('add_disaster') }}" class="btn btn-danger w-100">
+                            <i class="fas fa-plus me-2"></i>Add Disaster
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('add_camp') }}" class="btn btn-info w-100">
+                            <i class="fas fa-plus me-2"></i>Add Camp
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('add_volunteer') }}" class="btn btn-success w-100">
+                            <i class="fas fa-plus me-2"></i>Add Volunteer
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('add_donation') }}" class="btn btn-primary w-100">
+                            <i class="fas fa-plus me-2"></i>Add Donation
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Wait for DOM to be fully loaded and add a small delay for Flask app
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, waiting for Flask app to be ready...');
+    
+    // Add a small delay to ensure Flask app is ready
+    setTimeout(function() {
+        console.log('Initializing charts...');
+        
+        // Chart colors
+        const colors = {
+            primary: '#007bff',
+            danger: '#dc3545',
+            warning: '#ffc107',
+            success: '#28a745',
+            info: '#17a2b8',
+            secondary: '#6c757d'
+        };
+
+        // Function to create chart with error handling
+        function createChart(canvasId, endpoint, chartType, options = {}) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) {
+                console.error(`Canvas ${canvasId} not found`);
+                return;
+            }
+            
+            console.log(`Fetching data from ${endpoint}...`);
+            
+            fetch(endpoint, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                console.log(`${endpoint} response status:`, response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log(`${canvasId} data:`, data);
+                const ctx = canvas.getContext('2d');
+                new Chart(ctx, {
+                    type: chartType,
+                    data: {
+                        labels: Object.keys(data),
+                        datasets: [{
+                            data: Object.values(data),
+                            backgroundColor: options.backgroundColor || [colors.primary, colors.warning, colors.danger, colors.info, colors.success, colors.secondary]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        ...options
+                    }
+                });
+                console.log(`${canvasId} chart created successfully`);
+            })
+            .catch(error => {
+                console.error(`Error loading ${canvasId}:`, error);
+                canvas.innerHTML = '<p class="text-center text-muted">Error loading chart: ' + error.message + '</p>';
+            });
+        }
+
+        // Initialize all charts with delays between them
+        createChart('disasterTypesChart', '/api/charts/disaster-types', 'pie', {
+            plugins: { legend: { position: 'bottom' } }
+        });
+        
+        setTimeout(() => {
+            createChart('resourceShortagesChart', '/api/charts/resource-shortages', 'bar', {
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } }
+            });
+        }, 100);
+        
+        setTimeout(() => {
+            createChart('volunteerStatusChart', '/api/charts/volunteer-status', 'doughnut', {
+                plugins: { legend: { position: 'bottom' } }
+            });
+        }, 200);
+        
+        setTimeout(() => {
+            createChart('donationTypesChart', '/api/charts/donation-types', 'bar', {
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } }
+            });
+        }, 300);
+        
+    }, 1000); // Wait 1 second for Flask app to be ready
+});
+</script>
+{% endblock %}

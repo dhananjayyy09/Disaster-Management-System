@@ -1,0 +1,324 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - Disaster Relief Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="display-5 text-secondary mb-4">
+            <i class="fas fa-chart-bar me-3"></i>Reports & Analytics
+        </h1>
+    </div>
+</div>
+
+<!-- System Overview -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-tachometer-alt me-2"></i>System Overview
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h3 class="text-danger">{{ disaster_stats.total_disasters }}</h3>
+                            <p class="text-muted">Total Disasters</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h3 class="text-info">{{ camp_stats.total_camps }}</h3>
+                            <p class="text-muted">Relief Camps</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h3 class="text-success">{{ volunteer_stats.total_volunteers }}</h3>
+                            <p class="text-muted">Volunteers</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h3 class="text-primary">{{ donation_stats.total_donations }}</h3>
+                            <p class="text-muted">Donations</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Statistics -->
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Disaster Statistics
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="text-center mb-3">
+                            <h4 class="text-danger">{{ disaster_stats.active_disasters }}</h4>
+                            <small class="text-muted">Active</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center mb-3">
+                            <h4 class="text-success">{{ disaster_stats.resolved_disasters }}</h4>
+                            <small class="text-muted">Resolved</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <h6 class="mt-3">By Type:</h6>
+                {% for type, count in disaster_stats.by_type.items() %}
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span>{{ type }}</span>
+                    <span class="badge bg-secondary">{{ count }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-campground me-2"></i>Camp Statistics
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="text-center mb-3">
+                            <h4 class="text-info">{{ camp_stats.active_camps }}</h4>
+                            <small class="text-muted">Active Camps</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center mb-3">
+                            <h4 class="text-warning">{{ camp_stats.overcrowded_camps }}</h4>
+                            <small class="text-muted">Overcrowded</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-6">
+                        <div class="text-center mb-3">
+                            <h4 class="text-primary">{{ camp_stats.total_capacity }}</h4>
+                            <small class="text-muted">Total Capacity</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center mb-3">
+                            <h4 class="text-success">{{ camp_stats.total_occupancy }}</h4>
+                            <small class="text-muted">Current Occupancy</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="progress mb-3">
+                    <div class="progress-bar" style="width: {{ camp_stats.average_occupancy }}%">
+                        {{ camp_stats.average_occupancy }}%
+                    </div>
+                </div>
+                <small class="text-muted">Average Occupancy Rate</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-users me-2"></i>Volunteer Statistics
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="text-center mb-3">
+                            <h4 class="text-success">{{ volunteer_stats.available_volunteers }}</h4>
+                            <small class="text-muted">Available</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center mb-3">
+                            <h4 class="text-warning">{{ volunteer_stats.assigned_volunteers }}</h4>
+                            <small class="text-muted">Assigned</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-6">
+                        <div class="text-center mb-3">
+                            <h4 class="text-info">{{ volunteer_stats.active_assignments }}</h4>
+                            <small class="text-muted">Active Assignments</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center mb-3">
+                            <h4 class="text-primary">{{ volunteer_stats.completed_assignments }}</h4>
+                            <small class="text-muted">Completed</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-gift me-2"></i>Donation Statistics
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="text-center mb-3">
+                            <h4 class="text-warning">{{ donation_stats.pending_donations }}</h4>
+                            <small class="text-muted">Pending</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center mb-3">
+                            <h4 class="text-success">{{ donation_stats.received_donations }}</h4>
+                            <small class="text-muted">Received</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-6">
+                        <div class="text-center mb-3">
+                            <h4 class="text-info">{{ donation_stats.allocated_donations }}</h4>
+                            <small class="text-muted">Allocated</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center mb-3">
+                            <h4 class="text-primary">{{ donation_stats.total_donated_quantity }}</h4>
+                            <small class="text-muted">Total Quantity</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Resource Statistics -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-boxes me-2"></i>Resource Statistics
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h3 class="text-danger">{{ resource_stats.critical_shortages }}</h3>
+                            <p class="text-muted">Critical Shortages</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h3 class="text-warning">{{ resource_stats.total_shortages }}</h3>
+                            <p class="text-muted">Total Shortages</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h3 class="text-info">{{ resource_stats.total_resource_types }}</h3>
+                            <p class="text-muted">Resource Types</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h3 class="text-primary">{{ resource_stats.resources_by_type|length }}</h3>
+                            <p class="text-muted">Types with Shortages</p>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if resource_stats.resources_by_type %}
+                <h6 class="mt-4">Resource Types with Shortages:</h6>
+                <div class="row">
+                    {% for type, count in resource_stats.resources_by_type.items() %}
+                    <div class="col-md-3 mb-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>{{ type }}</span>
+                            <span class="badge bg-danger">{{ count }} shortages</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Options -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-download me-2"></i>Export Data
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <button class="btn btn-outline-primary w-100" onclick="exportData('disasters')">
+                            <i class="fas fa-file-csv me-2"></i>Export Disasters
+                        </button>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <button class="btn btn-outline-info w-100" onclick="exportData('camps')">
+                            <i class="fas fa-file-csv me-2"></i>Export Camps
+                        </button>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <button class="btn btn-outline-success w-100" onclick="exportData('volunteers')">
+                            <i class="fas fa-file-csv me-2"></i>Export Volunteers
+                        </button>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <button class="btn btn-outline-primary w-100" onclick="exportData('donations')">
+                            <i class="fas fa-file-csv me-2"></i>Export Donations
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function exportData(type) {
+    // This would typically make an API call to export data
+    alert('Export functionality would be implemented here to download ' + type + ' data as CSV');
+}
+</script>
+{% endblock %}

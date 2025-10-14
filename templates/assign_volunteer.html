@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}Assign Volunteer - Disaster Relief Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="display-4 text-primary mb-4">
+            <i class="fas fa-user-plus me-3"></i>Assign Volunteer
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-users me-2"></i>Assign Volunteer to Relief Camp
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="volunteer_id" class="form-label">Select Volunteer</label>
+                            <select class="form-select" id="volunteer_id" name="volunteer_id" required>
+                                <option value="">Choose a volunteer...</option>
+                                {% for volunteer in volunteers %}
+                                <option value="{{ volunteer.volunteer_id }}">
+                                    {{ volunteer.first_name }} {{ volunteer.last_name }}
+                                    {% if volunteer.skills %}
+                                        - {{ volunteer.skills }}
+                                    {% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="camp_id" class="form-label">Select Relief Camp</label>
+                            <select class="form-select" id="camp_id" name="camp_id" required>
+                                <option value="">Choose a camp...</option>
+                                {% for camp in camps %}
+                                <option value="{{ camp.camp_id }}">
+                                    {{ camp.camp_name }} - {{ camp.location }}
+                                    {% if camp.disaster_name %}
+                                        ({{ camp.disaster_name }})
+                                    {% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="role" class="form-label">Role/Position</label>
+                            <select class="form-select" id="role" name="role" required>
+                                <option value="">Select role...</option>
+                                <option value="Coordinator">Camp Coordinator</option>
+                                <option value="Medical Staff">Medical Staff</option>
+                                <option value="Food Distribution">Food Distribution</option>
+                                <option value="Shelter Management">Shelter Management</option>
+                                <option value="Logistics">Logistics</option>
+                                <option value="Communication">Communication</option>
+                                <option value="Security">Security</option>
+                                <option value="General Support">General Support</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="start_date" class="form-label">Start Date</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <label for="notes" class="form-label">Additional Notes (Optional)</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3" 
+                                      placeholder="Any additional information about this assignment..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('volunteers') }}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Volunteers
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-user-check me-2"></i>Assign Volunteer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Available Volunteers Summary -->
+<div class="row mt-4">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-users me-2"></i>Available Volunteers
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if volunteers %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Skills</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for volunteer in volunteers[:5] %}
+                                <tr>
+                                    <td>{{ volunteer.first_name }} {{ volunteer.last_name }}</td>
+                                    <td>
+                                        {% if volunteer.skills %}
+                                            <span class="badge bg-info">{{ volunteer.skills }}</span>
+                                        {% else %}
+                                            <span class="text-muted">No skills listed</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success">Available</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if volunteers|length > 5 %}
+                        <small class="text-muted">Showing first 5 of {{ volunteers|length }} available volunteers</small>
+                    {% endif %}
+                {% else %}
+                    <p class="text-muted">No available volunteers found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-campground me-2"></i>Active Relief Camps
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if camps %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Camp Name</th>
+                                    <th>Location</th>
+                                    <th>Disaster</th>
+                                    <th>Capacity</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for camp in camps[:5] %}
+                                <tr>
+                                    <td>{{ camp.camp_name }}</td>
+                                    <td>{{ camp.location }}</td>
+                                    <td>
+                                        {% if camp.disaster_name %}
+                                            <span class="badge bg-danger">{{ camp.disaster_name }}</span>
+                                        {% else %}
+                                            <span class="text-muted">Unknown</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ camp.current_occupancy or 0 }}/{{ camp.capacity }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if camps|length > 5 %}
+                        <small class="text-muted">Showing first 5 of {{ camps|length }} active camps</small>
+                    {% endif %}
+                {% else %}
+                    <p class="text-muted">No active relief camps found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set today's date as default
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('start_date').value = today;
+    
+    // Add form validation
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const volunteerId = document.getElementById('volunteer_id').value;
+        const campId = document.getElementById('camp_id').value;
+        const role = document.getElementById('role').value;
+        
+        if (!volunteerId || !campId || !role) {
+            e.preventDefault();
+            alert('Please fill in all required fields.');
+            return false;
+        }
+    });
+});
+</script>
+{% endblock %}

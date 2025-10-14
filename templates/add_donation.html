@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Add Donation - Disaster Relief Management System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-gift me-2"></i>Record New Donation
+                </h3>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="donor_name" class="form-label">Donor Name *</label>
+                            <input type="text" class="form-control" id="donor_name" name="donor_name" required>
+                            <div class="form-text">Individual, organization, or company name</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="donor_contact" class="form-label">Donor Contact</label>
+                            <input type="text" class="form-control" id="donor_contact" name="donor_contact">
+                            <div class="form-text">Email or phone number for follow-up</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="resource_type_id" class="form-label">Resource Type *</label>
+                            <select class="form-select" id="resource_type_id" name="resource_type_id" required>
+                                <option value="">Select Resource Type</option>
+                                {% for resource_type in resource_types %}
+                                <option value="{{ resource_type.resource_type_id }}">
+                                    {{ resource_type.type_name }} ({{ resource_type.unit }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="quantity" class="form-label">Quantity *</label>
+                            <input type="number" class="form-control" id="quantity" name="quantity" min="1" required>
+                            <div class="form-text">Amount donated (in specified units)</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Additional details about the donation..."></textarea>
+                        <div class="form-text">Include any special instructions, conditions, or additional information</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('donations') }}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Record Donation
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Resource Types Info -->
+<div class="row justify-content-center mt-4">
+    <div class="col-lg-8">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-info-circle me-2"></i>Available Resource Types
+                </h5>
+                <div class="row">
+                    {% for resource_type in resource_types %}
+                    <div class="col-md-4 mb-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span><strong>{{ resource_type.type_name }}</strong></span>
+                            <span class="badge bg-secondary">{{ resource_type.unit }}</span>
+                        </div>
+                        {% if resource_type.description %}
+                        <small class="text-muted">{{ resource_type.description }}</small>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

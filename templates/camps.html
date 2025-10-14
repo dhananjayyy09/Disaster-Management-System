@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}Relief Camps - Disaster Relief Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="display-5 text-info">
+                <i class="fas fa-campground me-3"></i>Relief Camp Management
+            </h1>
+            <a href="{{ url_for('add_camp') }}" class="btn btn-info">
+                <i class="fas fa-plus me-2"></i>Add New Camp
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-list me-2"></i>All Relief Camps
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if camps %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Camp Name</th>
+                                    <th>Disaster</th>
+                                    <th>Location</th>
+                                    <th>Capacity</th>
+                                    <th>Occupancy</th>
+                                    <th>% Full</th>
+                                    <th>Status</th>
+                                    <th>Contact</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for camp in camps %}
+                                <tr>
+                                    <td>{{ camp.camp_id }}</td>
+                                    <td>
+                                        <strong>{{ camp.camp_name }}</strong>
+                                        <br><small class="text-muted">{{ camp.location }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ camp.disaster_name }}</span>
+                                        <br><small class="text-muted">{{ camp.disaster_type }}</small>
+                                    </td>
+                                    <td>{{ camp.location }}</td>
+                                    <td>{{ camp.capacity }}</td>
+                                    <td>{{ camp.current_occupancy }}</td>
+                                    <td>
+                                        {% set occupancy_pct = camp.occupancy_percentage %}
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar 
+                                                {% if occupancy_pct >= 95 %}bg-danger
+                                                {% elif occupancy_pct >= 80 %}bg-warning
+                                                {% elif occupancy_pct >= 50 %}bg-info
+                                                {% else %}bg-success{% endif %}" 
+                                                role="progressbar" 
+                                                style="width: {{ occupancy_pct }}%"
+                                                aria-valuenow="{{ occupancy_pct }}" 
+                                                aria-valuemin="0" 
+                                                aria-valuemax="100">
+                                                {{ "%.1f"|format(occupancy_pct) }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ 'danger' if occupancy_pct >= 95 else 'warning' if occupancy_pct >= 80 else 'info' if occupancy_pct >= 50 else 'success' }}">
+                                            {{ camp.capacity_status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if camp.contact_person %}
+                                            <strong>{{ camp.contact_person }}</strong>
+                                            {% if camp.contact_phone %}
+                                                <br><small class="text-muted">{{ camp.contact_phone }}</small>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-muted">No contact info</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#viewCampModal{{ camp.camp_id }}">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <a href="{{ url_for('resources') }}?camp_id={{ camp.camp_id }}" class="btn btn-sm btn-outline-warning">
+                                                <i class="fas fa-boxes"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-campground fa-5x text-muted mb-3"></i>
+                        <h4 class="text-muted">No Relief Camps Found</h4>
+                        <p class="text-muted">Start by adding your first relief camp to the system.</p>
+                        <a href="{{ url_for('add_camp') }}" class="btn btn-info">
+                            <i class="fas fa-plus me-2"></i>Add First Camp
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-campground fa-2x mb-2"></i>
+                <h4>{{ camps|length }}</h4>
+                <p class="mb-0">Total Camps</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-users fa-2x mb-2"></i>
+                <h4>{{ camps|sum(attribute='current_occupancy') }}</h4>
+                <p class="mb-0">Total Occupancy</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-bed fa-2x mb-2"></i>
+                <h4>{{ camps|sum(attribute='capacity') }}</h4>
+                <p class="mb-0">Total Capacity</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                <h4>{{ camps|selectattr('capacity_status', 'equalto', 'Overcrowded')|list|length }}</h4>
+                <p class="mb-0">Overcrowded</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Occupancy Alert -->
+{% if camps|selectattr('capacity_status', 'equalto', 'Overcrowded')|list|length > 0 %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="alert alert-danger">
+            <h5 class="alert-heading">
+                <i class="fas fa-exclamation-triangle me-2"></i>Overcrowded Camps Alert
+            </h5>
+            <p class="mb-0">The following camps are operating at or near full capacity:</p>
+            <ul class="mt-2">
+                {% for camp in camps %}
+                    {% if camp.capacity_status == 'Overcrowded' %}
+                    <li><strong>{{ camp.camp_name }}</strong> - {{ "%.1f"|format(camp.occupancy_percentage) }}% full ({{ camp.current_occupancy }}/{{ camp.capacity }})</li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

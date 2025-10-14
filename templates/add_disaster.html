@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Add Disaster - Disaster Relief Management System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-plus me-2"></i>Add New Disaster
+                </h3>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="name" class="form-label">Disaster Name *</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                            <div class="form-text">Enter a descriptive name for the disaster</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="type" class="form-label">Disaster Type *</label>
+                            <select class="form-select" id="type" name="type" required>
+                                <option value="">Select Disaster Type</option>
+                                <option value="Earthquake">Earthquake</option>
+                                <option value="Flood">Flood</option>
+                                <option value="Wildfire">Wildfire</option>
+                                <option value="Hurricane">Hurricane</option>
+                                <option value="Tornado">Tornado</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="location" class="form-label">Location *</label>
+                            <input type="text" class="form-control" id="location" name="location" required>
+                            <div class="form-text">City, region, or specific area affected</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="severity" class="form-label">Severity Level *</label>
+                            <select class="form-select" id="severity" name="severity" required>
+                                <option value="">Select Severity</option>
+                                <option value="Low">Low</option>
+                                <option value="Medium">Medium</option>
+                                <option value="High">High</option>
+                                <option value="Critical">Critical</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="4" placeholder="Provide additional details about the disaster..."></textarea>
+                        <div class="form-text">Include any relevant information about the disaster impact, affected areas, etc.</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('disasters') }}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-save me-2"></i>Create Disaster
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Info Card -->
+<div class="row justify-content-center mt-4">
+    <div class="col-lg-8">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-info-circle me-2"></i>Disaster Severity Guidelines
+                </h5>
+                <div class="row">
+                    <div class="col-md-3">
+                        <span class="badge bg-success">Low</span>
+                        <p class="small mt-1">Minimal impact, local response sufficient</p>
+                    </div>
+                    <div class="col-md-3">
+                        <span class="badge bg-info">Medium</span>
+                        <p class="small mt-1">Moderate impact, regional coordination needed</p>
+                    </div>
+                    <div class="col-md-3">
+                        <span class="badge bg-warning">High</span>
+                        <p class="small mt-1">Significant impact, state-level response required</p>
+                    </div>
+                    <div class="col-md-3">
+                        <span class="badge bg-danger">Critical</span>
+                        <p class="small mt-1">Major impact, federal assistance needed</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

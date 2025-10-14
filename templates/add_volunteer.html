@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Add Volunteer - Disaster Relief Management System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-user-plus me-2"></i>Add New Volunteer
+                </h3>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="first_name" class="form-label">First Name *</label>
+                            <input type="text" class="form-control" id="first_name" name="first_name" required>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="last_name" class="form-label">Last Name *</label>
+                            <input type="text" class="form-control" id="last_name" name="last_name" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email">
+                            <div class="form-text">Optional: For communication and updates</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="phone" class="form-label">Phone</label>
+                            <input type="tel" class="form-control" id="phone" name="phone">
+                            <div class="form-text">Optional: Emergency contact number</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="skills" class="form-label">Skills & Experience</label>
+                        <textarea class="form-control" id="skills" name="skills" rows="3" placeholder="List relevant skills (e.g., Medical, First Aid, Logistics, Communication, etc.)"></textarea>
+                        <div class="form-text">Separate multiple skills with commas</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('volunteers') }}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save me-2"></i>Register Volunteer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Skills Guidelines -->
+<div class="row justify-content-center mt-4">
+    <div class="col-lg-8">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-info-circle me-2"></i>Common Volunteer Skills
+                </h5>
+                <div class="row">
+                    <div class="col-md-3">
+                        <h6>Medical</h6>
+                        <ul class="list-unstyled">
+                            <li>• First Aid</li>
+                            <li>• Nursing</li>
+                            <li>• Emergency Medicine</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-3">
+                        <h6>Logistics</h6>
+                        <ul class="list-unstyled">
+                            <li>• Supply Chain</li>
+                            <li>• Transportation</li>
+                            <li>• Inventory Management</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-3">
+                        <h6>Communication</h6>
+                        <ul class="list-unstyled">
+                            <li>• Multilingual</li>
+                            <li>• Radio Operations</li>
+                            <li>• Community Outreach</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-3">
+                        <h6>Technical</h6>
+                        <ul class="list-unstyled">
+                            <li>• Search & Rescue</li>
+                            <li>• Heavy Equipment</li>
+                            <li>• IT Support</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

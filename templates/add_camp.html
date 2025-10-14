@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Add Relief Camp - Disaster Relief Management System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-campground me-2"></i>Add New Relief Camp
+                </h3>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="name" class="form-label">Camp Name *</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                            <div class="form-text">Unique identifier for this relief camp</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="disaster_id" class="form-label">Associated Disaster *</label>
+                            <select class="form-select" id="disaster_id" name="disaster_id" required>
+                                <option value="">Select Disaster</option>
+                                {% for disaster in disasters %}
+                                <option value="{{ disaster.disaster_id }}">
+                                    {{ disaster.disaster_name }} - {{ disaster.location }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="location" class="form-label">Location *</label>
+                            <input type="text" class="form-control" id="location" name="location" required>
+                            <div class="form-text">Specific address or area where camp is located</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="capacity" class="form-label">Capacity *</label>
+                            <input type="number" class="form-control" id="capacity" name="capacity" min="1" required>
+                            <div class="form-text">Maximum number of people the camp can accommodate</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="contact_person" class="form-label">Contact Person</label>
+                            <input type="text" class="form-control" id="contact_person" name="contact_person">
+                            <div class="form-text">Name of the camp coordinator or manager</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="contact_phone" class="form-label">Contact Phone</label>
+                            <input type="tel" class="form-control" id="contact_phone" name="contact_phone">
+                            <div class="form-text">Emergency contact number for the camp</div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('camps') }}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-info">
+                            <i class="fas fa-save me-2"></i>Create Camp
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Camp Guidelines -->
+<div class="row justify-content-center mt-4">
+    <div class="col-lg-8">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-info-circle me-2"></i>Relief Camp Guidelines
+                </h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Capacity Planning</h6>
+                        <ul class="list-unstyled">
+                            <li>• Plan for 10-15 sq ft per person</li>
+                            <li>• Include space for facilities</li>
+                            <li>• Consider emergency overflow</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Essential Facilities</h6>
+                        <ul class="list-unstyled">
+                            <li>• Sanitation facilities</li>
+                            <li>• Medical station</li>
+                            <li>• Food distribution area</li>
+                            <li>• Communication center</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

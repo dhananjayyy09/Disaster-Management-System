@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+
+{% block title %}Allocate Donation - Disaster Relief Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="display-4 text-primary mb-4">
+            <i class="fas fa-gift me-3"></i>Allocate Donation
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-hand-holding-heart me-2"></i>Allocate Donation to Relief Camp
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="donation_id" class="form-label">Select Donation</label>
+                            <select class="form-select" id="donation_id" name="donation_id" required>
+                                <option value="">Choose a donation...</option>
+                                {% for donation in pending_donations %}
+                                <option value="{{ donation.donation_id }}">
+                                    {{ donation.type_name }} - {{ donation.quantity_donated }} {{ donation.unit }}
+                                    ({{ donation.donor_name }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="camp_id" class="form-label">Select Relief Camp</label>
+                            <select class="form-select" id="camp_id" name="camp_id" required>
+                                <option value="">Choose a camp...</option>
+                                {% for camp in camps %}
+                                <option value="{{ camp.camp_id }}">
+                                    {{ camp.camp_name }} - {{ camp.location }}
+                                    {% if camp.disaster_name %}
+                                        ({{ camp.disaster_name }})
+                                    {% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="quantity" class="form-label">Quantity to Allocate</label>
+                            <input type="number" class="form-control" id="quantity" name="quantity" 
+                                   min="1" required placeholder="Enter quantity">
+                            <div class="form-text">Enter the amount to allocate to this camp</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="allocation_date" class="form-label">Allocation Date</label>
+                            <input type="date" class="form-control" id="allocation_date" name="allocation_date" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <label for="notes" class="form-label">Allocation Notes (Optional)</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3" 
+                                      placeholder="Any additional information about this allocation..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('donations') }}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Donations
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-hand-holding-heart me-2"></i>Allocate Donation
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pending Donations Summary -->
+<div class="row mt-4">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-clock me-2"></i>Pending Donations
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if pending_donations %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Quantity</th>
+                                    <th>Donor</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for donation in pending_donations[:5] %}
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-info">{{ donation.type_name }}</span>
+                                    </td>
+                                    <td>{{ donation.quantity_donated }} {{ donation.unit }}</td>
+                                    <td>{{ donation.donor_name }}</td>
+                                    <td>{{ donation.donation_date.strftime('%Y-%m-%d') if donation.donation_date else 'N/A' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if pending_donations|length > 5 %}
+                        <small class="text-muted">Showing first 5 of {{ pending_donations|length }} pending donations</small>
+                    {% endif %}
+                {% else %}
+                    <p class="text-muted">No pending donations found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-campground me-2"></i>Active Relief Camps
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if camps %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Camp Name</th>
+                                    <th>Location</th>
+                                    <th>Disaster</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for camp in camps[:5] %}
+                                <tr>
+                                    <td>{{ camp.camp_name }}</td>
+                                    <td>{{ camp.location }}</td>
+                                    <td>
+                                        {% if camp.disaster_name %}
+                                            <span class="badge bg-danger">{{ camp.disaster_name }}</span>
+                                        {% else %}
+                                            <span class="text-muted">Unknown</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success">Active</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if camps|length > 5 %}
+                        <small class="text-muted">Showing first 5 of {{ camps|length }} active camps</small>
+                    {% endif %}
+                {% else %}
+                    <p class="text-muted">No active relief camps found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set today's date as default
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('allocation_date').value = today;
+    
+    // Update quantity field when donation is selected
+    const donationSelect = document.getElementById('donation_id');
+    const quantityInput = document.getElementById('quantity');
+    
+    donationSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        if (selectedOption.value) {
+            // Extract quantity from option text (format: "Type - Quantity Unit (Donor)")
+            const text = selectedOption.text;
+            const match = text.match(/(\d+)\s+\w+/);
+            if (match) {
+                quantityInput.max = match[1];
+                quantityInput.placeholder = `Max: ${match[1]}`;
+            }
+        }
+    });
+    
+    // Add form validation
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const donationId = document.getElementById('donation_id').value;
+        const campId = document.getElementById('camp_id').value;
+        const quantity = document.getElementById('quantity').value;
+        
+        if (!donationId || !campId || !quantity) {
+            e.preventDefault();
+            alert('Please fill in all required fields.');
+            return false;
+        }
+        
+        if (parseInt(quantity) <= 0) {
+            e.preventDefault();
+            alert('Quantity must be greater than 0.');
+            return false;
+        }
+    });
+});
+</script>
+{% endblock %}
