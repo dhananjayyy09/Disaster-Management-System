@@ -2,11 +2,15 @@
 Disaster Relief Management System - Web Application
 Flask-based web interface for managing disaster relief operations
 """
-
-from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session
+from functools import wraps
 import json
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 import os
+import sys
+
+# Add current directory to Python path for imports
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from database_manager import DatabaseManager
 from managers.disaster_manager import DisasterManager
@@ -14,9 +18,22 @@ from managers.camp_manager import CampManager
 from managers.resource_manager import ResourceManager
 from managers.volunteer_manager import VolunteerManager
 from managers.donation_manager import DonationManager
+from managers.auth_manager import AuthManager
 
-app = Flask(__name__, template_folder='../templates', static_folder='../static')
-app.secret_key = 'your-secret-key-change-this'
+# Configure paths for templates and static folders
+# Since app.py is in 'src' folder, go up one level to find templates/static
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+TEMPLATE_DIR = os.path.join(BASE_DIR, 'templates')
+STATIC_DIR = os.path.join(BASE_DIR, 'static')
+
+print(f"📁 Template directory: {TEMPLATE_DIR}")
+print(f"📁 Static directory: {STATIC_DIR}")
+
+app = Flask(__name__, 
+            template_folder=TEMPLATE_DIR,
+            static_folder=STATIC_DIR)
+app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-this-in-production-12345')
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)
 
 # Initialize database and managers
 db = DatabaseManager()
@@ -25,14 +42,22 @@ camp_manager = CampManager(db)
 resource_manager = ResourceManager(db)
 volunteer_manager = VolunteerManager(db)
 donation_manager = DonationManager(db)
+auth_manager = AuthManager(db)
+
 
 def initialize_database():
     """Initialize database connection on first request"""
     if not db.connect():
-        print("Warning: Database connection failed")
+        print("⚠️  Warning: Database connection failed")
+        print("    Make sure MySQL is running and database is created")
+        return False
+    print("✅ Database connected successfully")
+    return True
+
 
 # Initialize database connection
 initialize_database()
+
 
 @app.before_request
 def before_request():
@@ -40,12 +65,119 @@ def before_request():
     if not db.is_connected():
         db.connect()
 
+
+# ==================== AUTHENTICATION DECORATORS ====================
+
+def login_required(f):
+    """Decorator to require login"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('Please log in to access this page.', 'warning')
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+def role_required(*roles):
+    """Decorator to check if user has required role"""
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if 'user_id' not in session:
+                flash('Please log in to access this page.', 'warning')
+                return redirect(url_for('login'))
+            
+            user_role = session.get('role')
+            if user_role not in roles:
+                flash('You do not have permission to access this page.', 'danger')
+                return redirect(url_for('index'))
+            
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+
+# ==================== AUTHENTICATION ROUTES ====================
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    """Login page"""
+    if 'user_id' in session:
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        result = auth_manager.login_user(username, password)
+        
+        if result['success']:
+            user = result['user']
+            session.permanent = True
+            session['user_id'] = user['user_id']
+            session['username'] = user['username']
+            session['role'] = user['role']
+            session['full_name'] = user['full_name']
+            
+            flash(f"Welcome back, {user['full_name']}!", 'success')
+            return redirect(url_for('index'))
+        else:
+            flash(result['message'], 'danger')
+    
+    return render_template('login.html')
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    """Registration page"""
+    if 'user_id' in session:
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        username = request.form.get('username')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+        role = request.form.get('role')
+        full_name = request.form.get('full_name')
+        phone = request.form.get('phone', '')
+        
+        if password != confirm_password:
+            flash('Passwords do not match!', 'danger')
+        else:
+            result = auth_manager.register_user(username, email, password, role, full_name, phone)
+            
+            if result['success']:
+                flash(result['message'] + ' Please log in.', 'success')
+                return redirect(url_for('login'))
+            else:
+                flash(result['message'], 'danger')
+    
+    return render_template('register.html')
+
+
+@app.route('/logout')
+def logout():
+    """Logout user"""
+    session.clear()
+    flash('You have been logged out successfully.', 'info')
+    return redirect(url_for('login'))
+
+
+# ==================== MAIN APPLICATION ROUTES ====================
+
 @app.route('/')
+@login_required
 def index():
     """Home page - Dashboard"""
     try:
         # Get dashboard summary
         summary = db.get_dashboard_summary()
+        
+        # Get user info
+        user_role = session.get('role')
+        user_name = session.get('full_name')
         
         # Get additional statistics
         disaster_stats = disaster_manager.get_disaster_statistics()
@@ -66,12 +198,16 @@ def index():
                              donation_stats=donation_stats,
                              recent_disasters=recent_disasters,
                              recent_camps=recent_camps,
-                             recent_donations=recent_donations)
+                             recent_donations=recent_donations,
+                             user_role=user_role,
+                             user_name=user_name)
     except Exception as e:
         flash(f"Error loading dashboard: {str(e)}", 'error')
         return render_template('dashboard.html', summary={})
 
+
 @app.route('/disasters')
+@login_required
 def disasters():
     """Disasters management page"""
     try:
@@ -81,9 +217,12 @@ def disasters():
         flash(f"Error loading disasters: {str(e)}", 'error')
         return render_template('disasters.html', disasters=[])
 
+
 @app.route('/disasters/add', methods=['GET', 'POST'])
+@login_required
+@role_required('admin', 'coordinator')
 def add_disaster():
-    """Add new disaster"""
+    """Add new disaster - Admin and Coordinator only"""
     if request.method == 'POST':
         try:
             name = request.form['name']
@@ -106,7 +245,9 @@ def add_disaster():
     
     return render_template('add_disaster.html')
 
+
 @app.route('/camps')
+@login_required
 def camps():
     """Relief camps management page"""
     try:
@@ -116,9 +257,12 @@ def camps():
         flash(f"Error loading camps: {str(e)}", 'error')
         return render_template('camps.html', camps=[])
 
+
 @app.route('/camps/add', methods=['GET', 'POST'])
+@login_required
+@role_required('admin', 'coordinator')
 def add_camp():
-    """Add new relief camp"""
+    """Add new relief camp - Admin and Coordinator only"""
     if request.method == 'POST':
         try:
             name = request.form['name']
@@ -144,7 +288,9 @@ def add_camp():
     disasters_list = disaster_manager.get_disasters_summary()
     return render_template('add_camp.html', disasters=disasters_list)
 
+
 @app.route('/resources')
+@login_required
 def resources():
     """Resources management page"""
     try:
@@ -157,7 +303,10 @@ def resources():
         flash(f"Error loading resources: {str(e)}", 'error')
         return render_template('resources.html', shortages=[], critical_shortages=[])
 
+
 @app.route('/resources/auto-allocate', methods=['POST'])
+@login_required
+@role_required('admin', 'coordinator')
 def auto_allocate():
     """Auto-allocate donations to camps with shortages"""
     try:
@@ -168,7 +317,9 @@ def auto_allocate():
     
     return redirect(url_for('resources'))
 
+
 @app.route('/volunteers')
+@login_required
 def volunteers():
     """Volunteers management page"""
     try:
@@ -181,9 +332,12 @@ def volunteers():
         flash(f"Error loading volunteers: {str(e)}", 'error')
         return render_template('volunteers.html', volunteers=[], available_volunteers=[])
 
+
 @app.route('/volunteers/add', methods=['GET', 'POST'])
+@login_required
+@role_required('admin', 'coordinator')
 def add_volunteer():
-    """Add new volunteer"""
+    """Add new volunteer - Admin and Coordinator only"""
     if request.method == 'POST':
         try:
             first_name = request.form['first_name']
@@ -206,9 +360,12 @@ def add_volunteer():
     
     return render_template('add_volunteer.html')
 
+
 @app.route('/volunteers/assign', methods=['GET', 'POST'])
+@login_required
+@role_required('admin', 'coordinator')
 def assign_volunteer():
-    """Assign volunteer to camp"""
+    """Assign volunteer to camp - Admin and Coordinator only"""
     if request.method == 'POST':
         try:
             volunteer_id = int(request.form['volunteer_id'])
@@ -234,7 +391,9 @@ def assign_volunteer():
                          volunteers=volunteers_list, 
                          camps=camps_list)
 
+
 @app.route('/donations')
+@login_required
 def donations():
     """Donations management page"""
     try:
@@ -247,9 +406,12 @@ def donations():
         flash(f"Error loading donations: {str(e)}", 'error')
         return render_template('donations.html', donations=[], pending_donations=[])
 
+
 @app.route('/donations/add', methods=['GET', 'POST'])
+@login_required
+@role_required('admin', 'coordinator')
 def add_donation():
-    """Add new donation"""
+    """Add new donation - Admin and Coordinator only"""
     if request.method == 'POST':
         try:
             donor_name = request.form['donor_name']
@@ -274,9 +436,12 @@ def add_donation():
     resource_types = db.get_resource_type_list()
     return render_template('add_donation.html', resource_types=resource_types)
 
+
 @app.route('/donations/allocate', methods=['GET', 'POST'])
+@login_required
+@role_required('admin', 'coordinator')
 def allocate_donation():
-    """Allocate donation to camp"""
+    """Allocate donation to camp - Admin and Coordinator only"""
     if request.method == 'POST':
         try:
             donation_id = int(request.form['donation_id'])
@@ -302,7 +467,9 @@ def allocate_donation():
                          pending_donations=pending_donations, 
                          camps=camps_list)
 
+
 @app.route('/reports')
+@login_required
 def reports():
     """Reports and analytics page"""
     try:
@@ -323,7 +490,11 @@ def reports():
         flash(f"Error loading reports: {str(e)}", 'error')
         return render_template('reports.html')
 
+
+# ==================== API ENDPOINTS ====================
+
 @app.route('/api/dashboard-stats')
+@login_required
 def api_dashboard_stats():
     """API endpoint for dashboard statistics"""
     try:
@@ -332,7 +503,9 @@ def api_dashboard_stats():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
 @app.route('/api/disasters')
+@login_required
 def api_disasters():
     """API endpoint for disasters data"""
     try:
@@ -341,7 +514,9 @@ def api_disasters():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
 @app.route('/api/camps')
+@login_required
 def api_camps():
     """API endpoint for camps data"""
     try:
@@ -350,7 +525,9 @@ def api_camps():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
 @app.route('/api/resources')
+@login_required
 def api_resources():
     """API endpoint for resources data"""
     try:
@@ -359,7 +536,9 @@ def api_resources():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
 @app.route('/api/volunteers')
+@login_required
 def api_volunteers():
     """API endpoint for volunteers data"""
     try:
@@ -368,7 +547,9 @@ def api_volunteers():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
 @app.route('/api/donations')
+@login_required
 def api_donations():
     """API endpoint for donations data"""
     try:
@@ -377,7 +558,9 @@ def api_donations():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
 @app.route('/api/charts/disaster-types')
+@login_required
 def api_charts_disaster_types():
     """API endpoint for disaster types chart"""
     try:
@@ -386,7 +569,9 @@ def api_charts_disaster_types():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
 @app.route('/api/charts/resource-shortages')
+@login_required
 def api_charts_resource_shortages():
     """API endpoint for resource shortages chart"""
     try:
@@ -395,7 +580,9 @@ def api_charts_resource_shortages():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
 @app.route('/api/charts/volunteer-status')
+@login_required
 def api_charts_volunteer_status():
     """API endpoint for volunteer status chart"""
     try:
@@ -407,7 +594,9 @@ def api_charts_volunteer_status():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
 @app.route('/api/charts/donation-types')
+@login_required
 def api_charts_donation_types():
     """API endpoint for donation types chart"""
     try:
@@ -419,15 +608,26 @@ def api_charts_donation_types():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
 if __name__ == '__main__':
-    # Create templates directory if it doesn't exist
-    if not os.path.exists('templates'):
-        os.makedirs('templates')
-    if not os.path.exists('static'):
-        os.makedirs('static')
-    
+    print("=" * 70)
     print("🌐 Starting Disaster Relief Management System Web Application...")
-    print("📱 Open your browser and go to: http://localhost:5000")
-    print("🔄 Press Ctrl+C to stop the server")
+    print("=" * 70)
+    print(f"\n📱 Open your browser and go to: http://localhost:5000")
+    print(f"📁 Templates folder: {TEMPLATE_DIR}")
+    print(f"📁 Static folder: {STATIC_DIR}")
+    print("\n✅ Login will be required for all pages")
+    print("\n📝 Default login credentials:")
+    print("   Admin:")
+    print("     Username: admin")
+    print("     Password: admin123")
+    print("\n   Coordinator:")
+    print("     Username: coordinator1")
+    print("     Password: coordinator123")
+    print("\n   Volunteer:")
+    print("     Username: volunteer1")
+    print("     Password: volunteer123")
+    print("\n🔄 Press Ctrl+C to stop the server")
+    print("=" * 70)
     
     app.run(debug=True, host='0.0.0.0', port=5000)

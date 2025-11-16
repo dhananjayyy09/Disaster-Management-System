@@ -5,7 +5,6 @@ Handles all database operations and connections
 
 import mysql.connector
 from mysql.connector import Error
-import pandas as pd
 from typing import List, Dict, Tuple, Optional
 
 class DatabaseManager:
