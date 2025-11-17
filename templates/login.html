@@ -11,109 +11,349 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animated background */
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('https://images.unsplash.com/photo-1593113598332-cd288d649433?q=80&w=2070');
+            background-size: cover;
+            background-position: center;
+            opacity: 0.15;
+            animation: backgroundZoom 20s ease-in-out infinite alternate;
+        }
+
+        @keyframes backgroundZoom {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); }
+        }
+
+        /* Floating particles */
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            animation: float 15s infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) translateX(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100vh) translateX(100px); opacity: 0; }
+        }
+
+        .login-container {
+            position: relative;
+            z-index: 10;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-        
-        .login-container {
-            max-width: 450px;
-            width: 100%;
             padding: 20px;
         }
-        
+
         .login-card {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            max-width: 1200px;
+            width: 100%;
+            display: flex;
+            animation: slideUp 0.8s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .login-left {
+            flex: 1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 60px;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
             overflow: hidden;
         }
-        
-        .login-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
+
+        .login-left::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .login-left-content {
+            position: relative;
+            z-index: 2;
             text-align: center;
         }
-        
-        .login-header i {
+
+        .login-left h1 {
             font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .login-left .icon {
+            font-size: 8rem;
+            margin-bottom: 30px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .login-left p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-top: 20px;
+        }
+
+        .login-right {
+            flex: 1;
+            padding: 60px;
+            background: white;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .login-header h2 {
+            color: #333;
+            font-size: 2.5rem;
+            font-weight: 700;
             margin-bottom: 10px;
         }
-        
-        .login-body {
-            padding: 40px;
+
+        .login-header p {
+            color: #666;
+            font-size: 1.1rem;
         }
-        
-        .form-control:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-        }
-        
-        .btn-login {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            color: white;
-            padding: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            transition: transform 0.2s;
-        }
-        
-        .btn-login:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
-            color: white;
-        }
-        
-        .role-selection {
+
+        .role-selector {
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
+            gap: 15px;
+            margin-bottom: 30px;
         }
-        
+
         .role-btn {
             flex: 1;
-            padding: 15px;
+            padding: 20px;
             border: 2px solid #e0e0e0;
-            border-radius: 8px;
+            border-radius: 15px;
             background: white;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
             text-align: center;
         }
-        
+
         .role-btn:hover {
             border-color: #667eea;
-            background: #f8f9ff;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.2);
         }
-        
+
         .role-btn.active {
             border-color: #667eea;
-            background: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
         }
-        
+
         .role-btn i {
-            font-size: 2rem;
+            font-size: 2.5rem;
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .input-icon {
+            position: relative;
+        }
+
+        .input-icon i {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+
+        .input-icon input {
+            padding-left: 50px;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-login:active {
+            transform: translateY(-1px);
+        }
+
+        .form-check {
+            margin: 20px 0;
+        }
+
+        .form-check label {
+            color: #666;
+        }
+
+        .signup-link {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+        }
+
+        .signup-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .signup-link a:hover {
+            text-decoration: underline;
+        }
+
+        .footer-text {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 30px;
+            font-size: 0.9rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .login-card {
+                flex-direction: column;
+            }
+            
+            .login-left {
+                padding: 40px;
+            }
+            
+            .login-left h1 {
+                font-size: 2rem;
+            }
+            
+            .login-left .icon {
+                font-size: 5rem;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Floating particles -->
+    <div class="particle" style="width: 10px; height: 10px; left: 10%; animation-delay: 0s;"></div>
+    <div class="particle" style="width: 15px; height: 15px; left: 20%; animation-delay: 2s;"></div>
+    <div class="particle" style="width: 8px; height: 8px; left: 30%; animation-delay: 4s;"></div>
+    <div class="particle" style="width: 12px; height: 12px; left: 50%; animation-delay: 1s;"></div>
+    <div class="particle" style="width: 10px; height: 10px; left: 70%; animation-delay: 3s;"></div>
+    <div class="particle" style="width: 14px; height: 14px; left: 90%; animation-delay: 5s;"></div>
+
     <div class="login-container">
         <div class="login-card">
-            <div class="login-header">
-                <i class="fas fa-heartbeat"></i>
-                <h2 class="mb-0">Disaster Relief System</h2>
-                <p class="mb-0">Sign in to continue</p>
+            <!-- Left Side - Branding -->
+            <div class="login-left">
+                <div class="login-left-content">
+                    <div class="icon">
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <h1>Disaster Relief System</h1>
+                    <p>Coordinating relief efforts worldwide</p>
+                    <p style="margin-top: 40px; font-size: 1rem; opacity: 0.7;">
+                        <i class="fas fa-shield-alt me-2"></i>Secure & Reliable
+                    </p>
+                </div>
             </div>
-            
-            <div class="login-body">
+
+            <!-- Right Side - Login Form -->
+            <div class="login-right">
+                <div class="login-header">
+                    <h2>Welcome Back!</h2>
+                    <p>Sign in to continue</p>
+                </div>
+
+                <!-- Flash Messages -->
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
                         {% for category, message in messages %}
@@ -124,81 +364,98 @@
                         {% endfor %}
                     {% endif %}
                 {% endwith %}
-                
-                <form method="POST">
-                    <div class="mb-4">
-                        <label class="form-label fw-bold">Login As:</label>
-                        <div class="role-selection">
-                            <div class="role-btn active" data-role="admin">
-                                <i class="fas fa-user-shield"></i>
-                                <small>Admin</small>
-                            </div>
-                            <div class="role-btn" data-role="coordinator">
-                                <i class="fas fa-user-tie"></i>
-                                <small>Coordinator</small>
-                            </div>
-                            <div class="role-btn" data-role="volunteer">
-                                <i class="fas fa-user-friends"></i>
-                                <small>Volunteer</small>
-                            </div>
+
+                <form method="POST" action="{{ url_for('login') }}">
+                    <!-- Role Selector -->
+                    <div class="role-selector">
+                        <div class="role-btn active" data-role="admin">
+                            <i class="fas fa-user-shield"></i>
+                            <div>Admin</div>
+                        </div>
+                        <div class="role-btn" data-role="coordinator">
+                            <i class="fas fa-user-tie"></i>
+                            <div>Coordinator</div>
+                        </div>
+                        <div class="role-btn" data-role="volunteer">
+                            <i class="fas fa-users"></i>
+                            <div>Volunteer</div>
                         </div>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label for="username" class="form-label">
+
+                    <!-- Username Field -->
+                    <div class="form-group">
+                        <label class="form-label">
                             <i class="fas fa-user me-2"></i>Username or Email
                         </label>
-                        <input type="text" class="form-control" id="username" name="username" required autofocus>
+                        <div class="input-icon">
+                            <i class="fas fa-user"></i>
+                            <input type="text" class="form-control" name="username" required 
+                                   placeholder="Enter your username or email" autofocus>
+                        </div>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label for="password" class="form-label">
+
+                    <!-- Password Field -->
+                    <div class="form-group">
+                        <label class="form-label">
                             <i class="fas fa-lock me-2"></i>Password
                         </label>
-                        <input type="password" class="form-control" id="password" name="password" required>
+                        <div class="input-icon">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" class="form-control" name="password" required 
+                                   placeholder="Enter your password">
+                        </div>
                     </div>
-                    
-                    <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input" id="remember">
-                        <label class="form-check-label" for="remember">Remember me</label>
+
+                    <!-- Remember Me -->
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="remember">
+                        <label class="form-check-label" for="remember">
+                            Remember me
+                        </label>
                     </div>
-                    
-                    <button type="submit" class="btn btn-login w-100 mb-3">
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn-login">
                         <i class="fas fa-sign-in-alt me-2"></i>Sign In
                     </button>
-                    
-                    <div class="text-center">
-                        <p class="mb-0">Don't have an account? 
-                            <a href="{{ url_for('register') }}" class="text-decoration-none fw-bold">Sign Up</a>
-                        </p>
-                    </div>
                 </form>
+
+                <!-- Sign Up Link -->
+                <div class="signup-link">
+                    Don't have an account? <a href="{{ url_for('register') }}">Sign Up</a>
+                </div>
             </div>
         </div>
-        
-        <div class="text-center mt-3 text-white">
-            <small>&copy; 2025 Disaster Relief Management System. All rights reserved.</small>
-        </div>
     </div>
-    
+
+    <div class="footer-text">
+        © 2025 Disaster Relief Management System. All rights reserved.
+    </div>
+
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
     <script>
-        // Role selection functionality
+        // Role button interactivity
         document.querySelectorAll('.role-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
             });
         });
-        
-        // Auto-hide alerts after 5 seconds
-        setTimeout(function() {
-            const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(function(alert) {
-                const bsAlert = new bootstrap.Alert(alert);
-                bsAlert.close();
+
+        // Add input focus animations
+        document.querySelectorAll('.form-control').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.style.transform = 'scale(1.02)';
             });
-        }, 5000);
+            
+            input.addEventListener('blur', function() {
+                this.parentElement.style.transform = 'scale(1)';
+            });
+        });
     </script>
 </body>
 </html>
+    
