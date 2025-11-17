@@ -125,7 +125,7 @@ Backup Tables:
     - One camp can receive multiple donation allocations.
     - Foreign key: `donation_allocations.camp_id` → `relief_camps.camp_id`
 
----
+
 
 ## Key Constraints and Business Rules
 
@@ -136,7 +136,6 @@ Backup Tables:
 - Default timestamps and status values used to track creation and updates.
 - Backup tables mirror core tables with additional columns `backup_timestamp` and `backup_action` for audit trails.
 
----
 
 ## Indexes for Performance
 
@@ -144,7 +143,6 @@ Backup Tables:
 - Foreign keys related to disaster, camp, volunteer, resource type, donation efficiently indexed.
 - Additional indexes on status, disaster type, availability status, and donation date optimize query speed.
 
----
 
 ## Data Flow and Operations
 
@@ -153,16 +151,11 @@ Backup Tables:
 - Backup tables automatically updated by triggers on every change.
 - Reports aggregated from core tables assist decision making.
 
----
-
 ## Scalability
 
 - Database design supports horizontal (partitioning) and vertical (indexing) scaling.
 - Archive tables planned for older data.
 - Triggers and backups ensure reliability and disaster recovery readiness.
 
----
 
 This ER diagram documentation now accurately reflects your current database and backup design, supporting full disaster relief lifecycle management with robust data integrity and audit capabilities.
-
-```
