@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Backup Dashboard - Disaster Relief Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="display-5 text-primary mb-4">
+            <i class="fas fa-database me-3"></i>Backup & Recovery Dashboard
+        </h1>
+    </div>
+</div>
+
+<!-- Backup Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-database fa-3x mb-2"></i>
+                <h3>{{ stats.total_backups if stats else 0 }}</h3>
+                <p class="mb-0">Total Backups</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-users fa-3x mb-2"></i>
+                <h3>{{ stats.users_backup if stats else 0 }}</h3>
+                <p class="mb-0">Users Backed Up</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-exclamation-triangle fa-3x mb-2"></i>
+                <h3>{{ stats.disasters_backup if stats else 0 }}</h3>
+                <p class="mb-0">Disasters Backed Up</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-gift fa-3x mb-2"></i>
+                <h3>{{ stats.donations_backup if stats else 0 }}</h3>
+                <p class="mb-0">Donations Backed Up</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Backup Actions -->
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-save me-2"></i>Create Backup
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Create a complete backup of all system data including users, disasters, camps, volunteers, and donations.</p>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Last Backup:</strong> {{ stats.latest_backup if stats and stats.latest_backup != 'Never' else 'Never' }}
+                </div>
+                
+                <form method="POST" action="{{ url_for('create_backup') }}" onsubmit="return confirm('Create full system backup now?');">
+                    <button type="submit" class="btn btn-primary btn-lg w-100">
+                        <i class="fas fa-save me-2"></i>Create Full Backup Now
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-trash-alt me-2"></i>Clear Old Backups
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Remove backup records older than specified days to save space.</p>
+                
+                <form method="POST" action="{{ url_for('clear_backups') }}" onsubmit="return confirm('This will delete old backup records. Continue?');">
+                    <div class="mb-3">
+                        <label for="days" class="form-label">Delete backups older than:</label>
+                        <select class="form-select" id="days" name="days">
+                            <option value="7">7 days</option>
+                            <option value="30" selected>30 days</option>
+                            <option value="60">60 days</option>
+                            <option value="90">90 days</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-danger btn-lg w-100">
+                        <i class="fas fa-trash-alt me-2"></i>Clear Old Backups
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Backup Details -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-table me-2"></i>Backup Details by Table
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Table Name</th>
+                                <th>Backup Records</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><i class="fas fa-users me-2"></i>Users</td>
+                                <td>{{ stats.users_backup if stats else 0 }}</td>
+                                <td><span class="badge bg-success">Active</span></td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-exclamation-triangle me-2"></i>Disasters</td>
+                                <td>{{ stats.disasters_backup if stats else 0 }}</td>
+                                <td><span class="badge bg-success">Active</span></td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-campground me-2"></i>Relief Camps</td>
+                                <td>{{ stats.relief_camps_backup if stats else 0 }}</td>
+                                <td><span class="badge bg-success">Active</span></td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-hands-helping me-2"></i>Volunteers</td>
+                                <td>{{ stats.volunteers_backup if stats else 0 }}</td>
+                                <td><span class="badge bg-success">Active</span></td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-gift me-2"></i>Donations</td>
+                                <td>{{ stats.donations_backup if stats else 0 }}</td>
+                                <td><span class="badge bg-success">Active</span></td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-boxes me-2"></i>Resources</td>
+                                <td>{{ stats.resources_backup if stats else 0 }}</td>
+                                <td><span class="badge bg-success">Active</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Info Section -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="alert alert-success">
+            <h5><i class="fas fa-shield-alt me-2"></i>Automatic Backup Protection</h5>
+            <p class="mb-0">Your system is protected with automatic backup triggers. Every INSERT, UPDATE, and DELETE operation is automatically backed up to master tables.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

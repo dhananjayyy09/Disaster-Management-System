@@ -19,6 +19,7 @@ from managers.resource_manager import ResourceManager
 from managers.volunteer_manager import VolunteerManager
 from managers.donation_manager import DonationManager
 from managers.auth_manager import AuthManager
+from managers.backup_manager import BackupManager
 
 # Configure paths for templates and static folders
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -42,6 +43,7 @@ resource_manager = ResourceManager(db)
 volunteer_manager = VolunteerManager(db)
 donation_manager = DonationManager(db)
 auth_manager = AuthManager(db)
+backup_manager = BackupManager(db)
 
 def initialize_database():
     """Initialize database connection on first request"""
@@ -652,6 +654,58 @@ def toggle_user_status(user_id):
         flash(f"Error toggling user status: {str(e)}", 'error')
     
     return redirect(url_for('manage_users'))
+
+
+@app.route('/admin/backup')
+@login_required
+@role_required('admin')
+def backup_dashboard():
+    """Backup dashboard - Admin only"""
+    try:
+        stats = backup_manager.get_backup_statistics()
+        return render_template('backup_dashboard.html', stats=stats)
+    except Exception as e:
+        flash(f"Error loading backup dashboard: {str(e)}", 'error')
+        return redirect(url_for('index'))
+
+
+@app.route('/admin/backup/create', methods=['POST'])
+@login_required
+@role_required('admin')
+def create_backup():
+    """Create full backup - Admin only"""
+    try:
+        result = backup_manager.create_full_backup()
+        
+        if result['success']:
+            flash(result['message'], 'success')
+        else:
+            flash(result['message'], 'error')
+            
+    except Exception as e:
+        flash(f"Backup failed: {str(e)}", 'error')
+    
+    return redirect(url_for('backup_dashboard'))
+
+
+@app.route('/admin/backup/clear', methods=['POST'])
+@login_required
+@role_required('admin')
+def clear_backups():
+    """Clear old backups - Admin only"""
+    try:
+        days = int(request.form.get('days', 30))
+        result = backup_manager.clear_old_backups(days)
+        
+        if result['success']:
+            flash(result['message'], 'success')
+        else:
+            flash(result['message'], 'error')
+            
+    except Exception as e:
+        flash(f"Clear failed: {str(e)}", 'error')
+    
+    return redirect(url_for('backup_dashboard'))
 
 
 @app.route('/settings')

@@ -34,7 +34,8 @@ class DatabaseManager:
                 host=self.host,
                 user=self.user,
                 password=self.password,
-                database=self.database
+                database=self.database,
+                autocommit=True  # ⭐ ADD THIS LINE - Auto-commit changes
             )
             if self.connection.is_connected():
                 print(f"Successfully connected to MySQL database: {self.database}")
@@ -87,12 +88,16 @@ class DatabaseManager:
             
             cursor = self.connection.cursor()
             cursor.execute(query, params)
-            self.connection.commit()
+            self.connection.commit()  # ✅ Already present - good!
+            affected_rows = cursor.rowcount  # ⭐ NEW - Track changes
             cursor.close()
+            
+            print(f"✅ Update successful - {affected_rows} row(s) affected")  # ⭐ NEW - Debug info
             return True
         except Error as e:
-            print(f"Error executing update: {e}")
-            self.connection.rollback()
+            print(f"❌ Error executing update: {e}")
+            if self.connection:
+                self.connection.rollback()
             return False
     
     def commit(self):
