@@ -2,12 +2,14 @@
 Disaster Relief Management System - Web Application
 Flask-based web interface for managing disaster relief operations
 """
-from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session, Response
 from functools import wraps
 import json
 from datetime import datetime, date, timedelta
 import os
 import sys
+import csv
+from io import StringIO
 
 # Add current directory to Python path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -92,9 +94,160 @@ def role_required(*roles):
             return f(*args, **kwargs)
         return decorated_function
     return decorator
+# ============ EXPORT ROUTES ============
 
+@app.route('/export/disasters')
+@login_required
+def export_disasters():
+    """Export disasters data as CSV"""
+    try:
+        disasters = db.get_all_disasters()
+        
+        # Create CSV in memory
+        output = StringIO()
+        writer = csv.writer(output)
+        
+        # Write header
+        writer.writerow(['ID', 'Name', 'Type', 'Location', 'Severity', 'Start Date', 'End Date', 'Status', 'Description'])
+        
+        # Write data
+        for d in disasters:
+            writer.writerow([
+                d.get('disaster_id', ''),
+                d.get('disaster_name', ''),
+                d.get('disaster_type', ''),
+                d.get('location', ''),
+                d.get('severity', ''),
+                d.get('start_date', ''),
+                d.get('end_date', ''),
+                d.get('status', ''),
+                d.get('description', '')
+            ])
+        
+        output.seek(0)
+        return Response(
+            output.getvalue(),
+            mimetype='text/csv',
+            headers={'Content-Disposition': 'attachment; filename=disasters.csv'}
+        )
+    except Exception as e:
+        flash(f'Error exporting disasters: {str(e)}', 'error')
+        return redirect(url_for('reports'))
+
+
+@app.route('/export/camps')
+@login_required
+def export_camps():
+    """Export camps data as CSV"""
+    try:
+        camps = db.get_all_camps()
+        
+        output = StringIO()
+        writer = csv.writer(output)
+        
+        # Write header
+        writer.writerow(['ID', 'Camp Name', 'Disaster', 'Location', 'Capacity', 'Current Occupancy', 'Status', 'Contact Person', 'Contact Phone'])
+        
+        # Write data
+        for c in camps:
+            writer.writerow([
+                c.get('camp_id', ''),
+                c.get('camp_name', ''),
+                c.get('disaster_name', ''),
+                c.get('location', ''),
+                c.get('capacity', ''),
+                c.get('current_occupancy', ''),
+                c.get('status', ''),
+                c.get('contact_person', ''),
+                c.get('contact_phone', '')
+            ])
+        
+        output.seek(0)
+        return Response(
+            output.getvalue(),
+            mimetype='text/csv',
+            headers={'Content-Disposition': 'attachment; filename=camps.csv'}
+        )
+    except Exception as e:
+        flash(f'Error exporting camps: {str(e)}', 'error')
+        return redirect(url_for('reports'))
+
+
+@app.route('/export/volunteers')
+@login_required
+def export_volunteers():
+    """Export volunteers data as CSV"""
+    try:
+        volunteers = db.get_all_volunteers()
+        
+        output = StringIO()
+        writer = csv.writer(output)
+        
+        # Write header
+        writer.writerow(['ID', 'First Name', 'Last Name', 'Email', 'Phone', 'Skills', 'Status', 'Registration Date'])
+        
+        # Write data
+        for v in volunteers:
+            writer.writerow([
+                v.get('volunteer_id', ''),
+                v.get('first_name', ''),
+                v.get('last_name', ''),
+                v.get('email', ''),
+                v.get('phone', ''),
+                v.get('skills', ''),
+                v.get('availability_status', ''),
+                v.get('registration_date', '')
+            ])
+        
+        output.seek(0)
+        return Response(
+            output.getvalue(),
+            mimetype='text/csv',
+            headers={'Content-Disposition': 'attachment; filename=volunteers.csv'}
+        )
+    except Exception as e:
+        flash(f'Error exporting volunteers: {str(e)}', 'error')
+        return redirect(url_for('reports'))
+
+
+@app.route('/export/donations')
+@login_required
+def export_donations():
+    """Export donations data as CSV"""
+    try:
+        donations = db.get_all_donations()
+        
+        output = StringIO()
+        writer = csv.writer(output)
+        
+        # Write header
+        writer.writerow(['ID', 'Donor Name', 'Contact', 'Resource Type', 'Quantity', 'Date', 'Status', 'Notes'])
+        
+        # Write data
+        for d in donations:
+            writer.writerow([
+                d.get('donation_id', ''),
+                d.get('donor_name', ''),
+                d.get('donor_contact', ''),
+                d.get('type_name', ''),
+                d.get('quantity_donated', ''),
+                d.get('donation_date', ''),
+                d.get('status', ''),
+                d.get('notes', '')
+            ])
+        
+        output.seek(0)
+        return Response(
+            output.getvalue(),
+            mimetype='text/csv',
+            headers={'Content-Disposition': 'attachment; filename=donations.csv'}
+        )
+    except Exception as e:
+        flash(f'Error exporting donations: {str(e)}', 'error')
+        return redirect(url_for('reports'))
+    
+    
 # ==================== AUTHENTICATION ROUTES ====================
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     """Login page"""
