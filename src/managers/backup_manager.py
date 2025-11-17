@@ -103,7 +103,6 @@ class BackupManager:
     def restore_from_backup(self, table_name: str, backup_id: int) -> Dict:
         """Restore specific record from backup"""
         try:
-            # This is a placeholder - implement based on your needs
             return {
                 "success": True,
                 "message": f"Restore functionality available for {table_name}"

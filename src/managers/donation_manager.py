@@ -56,11 +56,9 @@ class DonationManager:
             donation['remaining_quantity'] = donation['quantity_donated'] - donation['allocated_quantity']
             
             # Calculate days since donation
-            # donation_date is already a string from database_manager
             try:
                 donation_date = donation.get('donation_date', '')
                 if donation_date:
-                    # Parse the string date
                     if ' ' in str(donation_date):
                         donation_date_obj = datetime.strptime(str(donation_date), '%Y-%m-%d %H:%M:%S')
                     else:

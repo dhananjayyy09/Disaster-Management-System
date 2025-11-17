@@ -64,8 +64,6 @@ CREATE TABLE resources (
 
 
 -- ==================== AUTHENTICATION TABLES ====================
-
-
 -- Users Table for Authentication
 CREATE TABLE users (
     user_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -85,9 +83,7 @@ CREATE TABLE users (
 
 
 -- ==================== VOLUNTEERS TABLES ====================
-
-
--- Volunteers Table (NOW with user_id column from the start)
+-- Volunteers Table 
 CREATE TABLE volunteers (
     volunteer_id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NULL,
@@ -102,7 +98,6 @@ CREATE TABLE volunteers (
     INDEX idx_availability (availability_status),
     INDEX idx_user (user_id)
 );
-
 
 -- Volunteer Assignments Table
 CREATE TABLE volunteer_assignments (
@@ -121,7 +116,6 @@ CREATE TABLE volunteer_assignments (
     INDEX idx_status (status)
 );
 
-
 -- Camp Coordinators Table (Link users to camps for coordinator role)
 CREATE TABLE camp_coordinators (
     coordinator_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -137,8 +131,6 @@ CREATE TABLE camp_coordinators (
 
 
 -- ==================== DONATIONS TABLES ====================
-
-
 -- Donations Table
 CREATE TABLE donations (
     donation_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -154,7 +146,6 @@ CREATE TABLE donations (
     INDEX idx_resource_type (resource_type_id),
     INDEX idx_donation_date (donation_date)
 );
-
 
 -- Donation Allocations Table
 CREATE TABLE donation_allocations (
@@ -173,8 +164,6 @@ CREATE TABLE donation_allocations (
 
 
 -- ==================== INSERT SAMPLE DATA ====================
-
-
 -- Insert resource types
 INSERT INTO resource_types (type_name, unit, description) VALUES
 ('Food', 'kg', 'Non-perishable food items'),
@@ -289,8 +278,6 @@ INSERT INTO volunteer_assignments (volunteer_id, camp_id, role, start_date, stat
 
 
 -- ==================== USEFUL VIEWS ====================
-
-
 -- View for camp resource summary
 CREATE VIEW camp_resource_summary AS
 SELECT 

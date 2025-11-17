@@ -110,11 +110,9 @@ class CampManager:
             camp['total_shortages'] = total_shortages
             
             # Calculate days since creation
-            # created_at is already a string from database_manager
             try:
                 created_date_str = camp.get('created_at', '')
                 if created_date_str:
-                    # Parse the string date
                     if ' ' in str(created_date_str):
                         created_date = datetime.strptime(str(created_date_str), '%Y-%m-%d %H:%M:%S')
                     else:

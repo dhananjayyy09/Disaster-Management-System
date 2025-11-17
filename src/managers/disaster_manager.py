@@ -52,18 +52,13 @@ class DisasterManager:
             disaster['camp_count'] = len(camps)
             
             # Calculate days since start
-            # start_date is already a string from database_manager
             try:
                 start_date_str = disaster.get('start_date', '')
                 if start_date_str:
-                    # Parse the string date
                     if ' ' in str(start_date_str):
-                        # Has time component
                         start_date = datetime.strptime(str(start_date_str), '%Y-%m-%d %H:%M:%S').date()
                     else:
-                        # Date only
                         start_date = datetime.strptime(str(start_date_str), '%Y-%m-%d').date()
-                    
                     days_active = (date.today() - start_date).days
                     disaster['days_active'] = days_active
                 else:
