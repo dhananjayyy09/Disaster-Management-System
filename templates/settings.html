@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - Disaster Relief Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="display-5 text-primary mb-4">
+            <i class="fas fa-cog me-3"></i>System Settings
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>System Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-4"><strong>System Name:</strong></div>
+                    <div class="col-md-8">Disaster Relief Management System</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4"><strong>Version:</strong></div>
+                    <div class="col-md-8">1.0.0</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4"><strong>Database:</strong></div>
+                    <div class="col-md-8">MySQL (Connected)</div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4"><strong>Your Role:</strong></div>
+                    <div class="col-md-8">
+                        <span class="badge bg-primary">{{ session.role|title }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            Additional settings and configurations will be available in future updates.
+        </div>
+    </div>
+</div>
+{% endblock %}

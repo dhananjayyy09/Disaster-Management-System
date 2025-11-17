@@ -12,7 +12,7 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <!-- ⭐ CUSTOM CSS - THIS WAS MISSING! ⭐ -->
+    <!-- Custom CSS -->
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
     
     {% block extra_head %}{% endblock %}
@@ -149,24 +149,33 @@
                                 <small class="text-muted">Logged in as {{ session.get('username', 'user') }}</small>
                             </li>
                             <li><hr class="dropdown-divider"></li>
+                            
+                            <!-- ⭐ UPDATED - Working Profile Link ⭐ -->
                             <li>
-                                <a class="dropdown-item" href="#">
+                                <a class="dropdown-item" href="{{ url_for('profile') }}">
                                     <i class="fas fa-user me-2"></i>My Profile
                                 </a>
                             </li>
+                            
+                            <!-- ⭐ UPDATED - Settings for Admin & Coordinator ⭐ -->
+                            {% if session.get('role') in ['admin', 'coordinator'] %}
                             <li>
-                                <a class="dropdown-item" href="#">
+                                <a class="dropdown-item" href="{{ url_for('settings') }}">
                                     <i class="fas fa-cog me-2"></i>Settings
                                 </a>
                             </li>
+                            {% endif %}
+                            
+                            <!-- ⭐ UPDATED - Manage Users for Admin Only ⭐ -->
                             {% if session.get('role') == 'admin' %}
                             <li><hr class="dropdown-divider"></li>
                             <li>
-                                <a class="dropdown-item" href="#">
+                                <a class="dropdown-item" href="{{ url_for('manage_users') }}">
                                     <i class="fas fa-users-cog me-2"></i>Manage Users
                                 </a>
                             </li>
                             {% endif %}
+                            
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <a class="dropdown-item text-danger" href="{{ url_for('logout') }}">

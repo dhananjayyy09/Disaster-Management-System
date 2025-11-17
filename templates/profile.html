@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile - Disaster Relief Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="display-5 text-primary mb-4">
+            <i class="fas fa-user-circle me-3"></i>My Profile
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Profile Information Card -->
+    <div class="col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-user-circle fa-5x text-primary"></i>
+                </div>
+                <h4>{{ user.full_name }}</h4>
+                <p class="text-muted">@{{ user.username }}</p>
+                <span class="badge bg-primary mb-3">{{ user.role|title }}</span>
+                
+                <hr>
+                
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('edit_profile') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-edit me-2"></i>Edit Profile
+                    </a>
+                    <a href="{{ url_for('change_password') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-key me-2"></i>Change Password
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Account Status Card -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Account Status
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Status:</span>
+                    <span class="badge bg-{{ 'success' if user.is_active else 'danger' }}">
+                        {{ 'Active' if user.is_active else 'Inactive' }}
+                    </span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Member Since:</span>
+                    <span>{{ user.created_at[:10] if user.created_at else 'N/A' }}</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Last Login:</span>
+                    <span>{{ user.last_login[:10] if user.last_login else 'Never' }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Profile Details Card -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-id-card me-2"></i>Profile Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <strong><i class="fas fa-user me-2 text-primary"></i>Full Name:</strong>
+                    </div>
+                    <div class="col-md-8">
+                        {{ user.full_name }}
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <strong><i class="fas fa-at me-2 text-primary"></i>Username:</strong>
+                    </div>
+                    <div class="col-md-8">
+                        {{ user.username }}
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <strong><i class="fas fa-envelope me-2 text-primary"></i>Email:</strong>
+                    </div>
+                    <div class="col-md-8">
+                        {{ user.email }}
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <strong><i class="fas fa-phone me-2 text-primary"></i>Phone:</strong>
+                    </div>
+                    <div class="col-md-8">
+                        {{ user.phone if user.phone else 'Not provided' }}
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <strong><i class="fas fa-user-tag me-2 text-primary"></i>Role:</strong>
+                    </div>
+                    <div class="col-md-8">
+                        <span class="badge bg-primary">{{ user.role|title }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Activity Stats (for volunteers) -->
+        {% if user.role == 'volunteer' and user.activity_stats %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-line me-2"></i>My Activity
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-6 mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h3 class="text-primary">{{ user.activity_stats.total_assignments }}</h3>
+                                <p class="text-muted mb-0">Total Assignments</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h3 class="text-success">{{ user.activity_stats.active_assignments }}</h3>
+                                <p class="text-muted mb-0">Active Assignments</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -480,6 +480,186 @@ def reports():
     except Exception as e:
         flash(f"Error loading reports: {str(e)}", 'error')
         return render_template('reports.html')
+    
+    
+# ==================== USER PROFILE ROUTES ====================
+
+@app.route('/profile')
+@login_required
+def profile():
+    """View user profile"""
+    try:
+        user_id = session.get('user_id')
+        user = auth_manager.get_user_by_id(user_id)
+        
+        if not user:
+            flash('User not found', 'error')
+            return redirect(url_for('index'))
+        
+        # Get user activity stats
+        if user['role'] == 'volunteer':
+            assignments = volunteer_manager.get_volunteer_assignments(user_id)
+            user['activity_stats'] = {
+                'total_assignments': len(assignments),
+                'active_assignments': len([a for a in assignments if a.get('status') == 'Active'])
+            }
+        
+        return render_template('profile.html', user=user)
+    except Exception as e:
+        flash(f"Error loading profile: {str(e)}", 'error')
+        return redirect(url_for('index'))
+
+
+@app.route('/profile/edit', methods=['GET', 'POST'])
+@login_required
+def edit_profile():
+    """Edit user profile"""
+    if request.method == 'POST':
+        try:
+            user_id = session.get('user_id')
+            full_name = request.form.get('full_name')
+            phone = request.form.get('phone')
+            email = request.form.get('email')
+            
+            result = auth_manager.update_user_profile(user_id, full_name, email, phone)
+            
+            if result['success']:
+                # Update session
+                session['full_name'] = full_name
+                flash(result['message'], 'success')
+            else:
+                flash(result['message'], 'error')
+                
+            return redirect(url_for('profile'))
+        except Exception as e:
+            flash(f"Error updating profile: {str(e)}", 'error')
+    
+    user_id = session.get('user_id')
+    user = auth_manager.get_user_by_id(user_id)
+    return render_template('edit_profile.html', user=user)
+
+
+@app.route('/profile/change-password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    """Change user password"""
+    if request.method == 'POST':
+        try:
+            user_id = session.get('user_id')
+            current_password = request.form.get('current_password')
+            new_password = request.form.get('new_password')
+            confirm_password = request.form.get('confirm_password')
+            
+            if new_password != confirm_password:
+                flash('New passwords do not match', 'error')
+                return redirect(url_for('change_password'))
+            
+            result = auth_manager.change_password(user_id, current_password, new_password)
+            
+            if result['success']:
+                flash(result['message'], 'success')
+                return redirect(url_for('profile'))
+            else:
+                flash(result['message'], 'error')
+                
+        except Exception as e:
+            flash(f"Error changing password: {str(e)}", 'error')
+    
+    return render_template('change_password.html')
+
+
+# ==================== ADMIN ROUTES ====================
+
+@app.route('/admin/users')
+@login_required
+@role_required('admin')
+def manage_users():
+    """Manage users - Admin only"""
+    try:
+        users = auth_manager.get_all_users()
+        return render_template('manage_users.html', users=users)
+    except Exception as e:
+        flash(f"Error loading users: {str(e)}", 'error')
+        return render_template('manage_users.html', users=[])
+
+
+@app.route('/admin/users/add', methods=['GET', 'POST'])
+@login_required
+@role_required('admin')
+def add_user():
+    """Add new user - Admin only"""
+    if request.method == 'POST':
+        try:
+            username = request.form.get('username')
+            email = request.form.get('email')
+            password = request.form.get('password')
+            role = request.form.get('role')
+            full_name = request.form.get('full_name')
+            phone = request.form.get('phone', '')
+            
+            result = auth_manager.register_user(username, email, password, role, full_name, phone)
+            
+            if result['success']:
+                flash(result['message'], 'success')
+                return redirect(url_for('manage_users'))
+            else:
+                flash(result['message'], 'error')
+                
+        except Exception as e:
+            flash(f"Error adding user: {str(e)}", 'error')
+    
+    return render_template('add_user.html')
+
+
+@app.route('/admin/users/delete/<int:user_id>', methods=['POST'])
+@login_required
+@role_required('admin')
+def delete_user(user_id):
+    """Delete user - Admin only"""
+    try:
+        # Don't allow deleting yourself
+        if user_id == session.get('user_id'):
+            flash('Cannot delete your own account', 'error')
+            return redirect(url_for('manage_users'))
+        
+        result = auth_manager.delete_user(user_id)
+        
+        if result['success']:
+            flash(result['message'], 'success')
+        else:
+            flash(result['message'], 'error')
+            
+    except Exception as e:
+        flash(f"Error deleting user: {str(e)}", 'error')
+    
+    return redirect(url_for('manage_users'))
+
+
+@app.route('/admin/users/toggle-status/<int:user_id>', methods=['POST'])
+@login_required
+@role_required('admin')
+def toggle_user_status(user_id):
+    """Toggle user active status - Admin only"""
+    try:
+        result = auth_manager.toggle_user_status(user_id)
+        
+        if result['success']:
+            flash(result['message'], 'success')
+        else:
+            flash(result['message'], 'error')
+            
+    except Exception as e:
+        flash(f"Error toggling user status: {str(e)}", 'error')
+    
+    return redirect(url_for('manage_users'))
+
+
+@app.route('/settings')
+@login_required
+@role_required('admin', 'coordinator')
+def settings():
+    """System settings"""
+    return render_template('settings.html') 
 
 # ==================== API ENDPOINTS ====================
 

@@ -5,7 +5,7 @@ Handles user authentication, registration, and session management
 
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 from database_manager import DatabaseManager
 
 
@@ -82,7 +82,7 @@ class AuthManager:
             user = users[0]
             
             # Check if user is active
-            if not user['is_active']:
+            if not user.get('is_active', True):
                 return {"success": False, "message": "Account is deactivated. Contact administrator."}
             
             # Verify password
@@ -96,7 +96,8 @@ class AuthManager:
             )
             
             # Remove password hash from response
-            del user['password_hash']
+            if 'password_hash' in user:
+                del user['password_hash']
             
             return {
                 "success": True,
@@ -109,12 +110,29 @@ class AuthManager:
     
     def get_user_by_id(self, user_id: int) -> Optional[Dict]:
         """Get user details by ID"""
-        query = """
-        SELECT user_id, username, email, role, full_name, phone, is_active, created_at, last_login
-        FROM users WHERE user_id = %s
-        """
-        users = self.db.execute_query(query, (user_id,))
-        return users[0] if users else None
+        try:
+            query = """
+            SELECT user_id, username, email, role, full_name, phone, is_active, created_at, last_login
+            FROM users WHERE user_id = %s
+            """
+            users = self.db.execute_query(query, (user_id,))
+            return users[0] if users else None
+        except Exception as e:
+            print(f"Error getting user: {e}")
+            return None
+    
+    def get_all_users(self) -> List[Dict]:
+        """Get all users"""
+        try:
+            query = """
+            SELECT user_id, username, email, role, full_name, phone, is_active, created_at, last_login 
+            FROM users 
+            ORDER BY created_at DESC
+            """
+            return self.db.execute_query(query)
+        except Exception as e:
+            print(f"Error getting users: {e}")
+            return []
     
     def get_user_permissions(self, user_id: int) -> Dict:
         """Get user permissions based on role"""
@@ -122,7 +140,7 @@ class AuthManager:
         if not user:
             return {"can_view": False, "can_create": False, "can_edit": False, "can_delete": False}
         
-        role = user['role']
+        role = user.get('role', '')
         
         if role == 'admin':
             return {
@@ -154,23 +172,34 @@ class AuthManager:
         
         return {"can_view": False, "can_create": False, "can_edit": False, "can_delete": False}
     
-    def change_password(self, user_id: int, old_password: str, new_password: str) -> Dict:
+    def update_user_profile(self, user_id: int, full_name: str, email: str, phone: str = "") -> Dict:
+        """Update user profile"""
+        try:
+            query = "UPDATE users SET full_name = %s, email = %s, phone = %s WHERE user_id = %s"
+            success = self.db.execute_update(query, (full_name, email, phone, user_id))
+            
+            if success:
+                return {"success": True, "message": "Profile updated successfully"}
+            else:
+                return {"success": False, "message": "Failed to update profile"}
+        except Exception as e:
+            return {"success": False, "message": f"Error: {str(e)}"}
+    
+    def change_password(self, user_id: int, current_password: str, new_password: str) -> Dict:
         """Change user password"""
         try:
             if len(new_password) < 6:
                 return {"success": False, "message": "New password must be at least 6 characters"}
             
-            # Get current password hash
-            user_query = self.db.execute_query(
-                "SELECT password_hash FROM users WHERE user_id = %s",
-                (user_id,)
-            )
+            # Get current user with password hash
+            query = "SELECT password_hash FROM users WHERE user_id = %s"
+            user_query = self.db.execute_query(query, (user_id,))
             
             if not user_query:
                 return {"success": False, "message": "User not found"}
             
-            # Verify old password
-            if not check_password_hash(user_query[0]['password_hash'], old_password):
+            # Verify current password
+            if not check_password_hash(user_query[0]['password_hash'], current_password):
                 return {"success": False, "message": "Current password is incorrect"}
             
             # Update password
@@ -187,3 +216,29 @@ class AuthManager:
                 
         except Exception as e:
             return {"success": False, "message": f"Error changing password: {str(e)}"}
+    
+    def delete_user(self, user_id: int) -> Dict:
+        """Delete user"""
+        try:
+            query = "DELETE FROM users WHERE user_id = %s"
+            success = self.db.execute_update(query, (user_id,))
+            
+            if success:
+                return {"success": True, "message": "User deleted successfully"}
+            else:
+                return {"success": False, "message": "Failed to delete user"}
+        except Exception as e:
+            return {"success": False, "message": f"Error: {str(e)}"}
+    
+    def toggle_user_status(self, user_id: int) -> Dict:
+        """Toggle user active status"""
+        try:
+            query = "UPDATE users SET is_active = NOT is_active WHERE user_id = %s"
+            success = self.db.execute_update(query, (user_id,))
+            
+            if success:
+                return {"success": True, "message": "User status updated"}
+            else:
+                return {"success": False, "message": "Failed to update status"}
+        except Exception as e:
+            return {"success": False, "message": f"Error: {str(e)}"}
