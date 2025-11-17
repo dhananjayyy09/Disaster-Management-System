@@ -21,7 +21,6 @@ from managers.donation_manager import DonationManager
 from managers.auth_manager import AuthManager
 
 # Configure paths for templates and static folders
-# Since app.py is in 'src' folder, go up one level to find templates/static
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEMPLATE_DIR = os.path.join(BASE_DIR, 'templates')
 STATIC_DIR = os.path.join(BASE_DIR, 'static')
@@ -44,7 +43,6 @@ volunteer_manager = VolunteerManager(db)
 donation_manager = DonationManager(db)
 auth_manager = AuthManager(db)
 
-
 def initialize_database():
     """Initialize database connection on first request"""
     if not db.connect():
@@ -54,17 +52,14 @@ def initialize_database():
     print("✅ Database connected successfully")
     return True
 
-
 # Initialize database connection
 initialize_database()
-
 
 @app.before_request
 def before_request():
     """Ensure database connection before each request"""
     if not db.is_connected():
         db.connect()
-
 
 # ==================== AUTHENTICATION DECORATORS ====================
 
@@ -77,7 +72,6 @@ def login_required(f):
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated_function
-
 
 def role_required(*roles):
     """Decorator to check if user has required role"""
@@ -96,7 +90,6 @@ def role_required(*roles):
             return f(*args, **kwargs)
         return decorated_function
     return decorator
-
 
 # ==================== AUTHENTICATION ROUTES ====================
 
@@ -127,7 +120,6 @@ def login():
     
     return render_template('login.html')
 
-
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     """Registration page"""
@@ -156,14 +148,12 @@ def register():
     
     return render_template('register.html')
 
-
 @app.route('/logout')
 def logout():
     """Logout user"""
     session.clear()
     flash('You have been logged out successfully.', 'info')
     return redirect(url_for('login'))
-
 
 # ==================== MAIN APPLICATION ROUTES ====================
 
@@ -184,6 +174,7 @@ def index():
         camp_stats = camp_manager.get_camp_statistics()
         volunteer_stats = volunteer_manager.get_volunteer_statistics()
         donation_stats = donation_manager.get_donation_statistics()
+        resource_stats = resource_manager.get_resource_statistics()
         
         # Get recent data for display
         recent_disasters = disaster_manager.get_disasters_summary()[:5]
@@ -196,6 +187,7 @@ def index():
                              camp_stats=camp_stats,
                              volunteer_stats=volunteer_stats,
                              donation_stats=donation_stats,
+                             resource_stats=resource_stats,
                              recent_disasters=recent_disasters,
                              recent_camps=recent_camps,
                              recent_donations=recent_donations,
@@ -203,8 +195,8 @@ def index():
                              user_name=user_name)
     except Exception as e:
         flash(f"Error loading dashboard: {str(e)}", 'error')
+        print(f"Dashboard error: {e}")
         return render_template('dashboard.html', summary={})
-
 
 @app.route('/disasters')
 @login_required
@@ -216,7 +208,6 @@ def disasters():
     except Exception as e:
         flash(f"Error loading disasters: {str(e)}", 'error')
         return render_template('disasters.html', disasters=[])
-
 
 @app.route('/disasters/add', methods=['GET', 'POST'])
 @login_required
@@ -245,7 +236,6 @@ def add_disaster():
     
     return render_template('add_disaster.html')
 
-
 @app.route('/camps')
 @login_required
 def camps():
@@ -256,7 +246,6 @@ def camps():
     except Exception as e:
         flash(f"Error loading camps: {str(e)}", 'error')
         return render_template('camps.html', camps=[])
-
 
 @app.route('/camps/add', methods=['GET', 'POST'])
 @login_required
@@ -288,7 +277,6 @@ def add_camp():
     disasters_list = disaster_manager.get_disasters_summary()
     return render_template('add_camp.html', disasters=disasters_list)
 
-
 @app.route('/resources')
 @login_required
 def resources():
@@ -303,7 +291,6 @@ def resources():
         flash(f"Error loading resources: {str(e)}", 'error')
         return render_template('resources.html', shortages=[], critical_shortages=[])
 
-
 @app.route('/resources/auto-allocate', methods=['POST'])
 @login_required
 @role_required('admin', 'coordinator')
@@ -316,7 +303,6 @@ def auto_allocate():
         flash(f"Error in auto-allocation: {str(e)}", 'error')
     
     return redirect(url_for('resources'))
-
 
 @app.route('/volunteers')
 @login_required
@@ -331,7 +317,6 @@ def volunteers():
     except Exception as e:
         flash(f"Error loading volunteers: {str(e)}", 'error')
         return render_template('volunteers.html', volunteers=[], available_volunteers=[])
-
 
 @app.route('/volunteers/add', methods=['GET', 'POST'])
 @login_required
@@ -359,7 +344,6 @@ def add_volunteer():
         return redirect(url_for('volunteers'))
     
     return render_template('add_volunteer.html')
-
 
 @app.route('/volunteers/assign', methods=['GET', 'POST'])
 @login_required
@@ -391,7 +375,6 @@ def assign_volunteer():
                          volunteers=volunteers_list, 
                          camps=camps_list)
 
-
 @app.route('/donations')
 @login_required
 def donations():
@@ -405,7 +388,6 @@ def donations():
     except Exception as e:
         flash(f"Error loading donations: {str(e)}", 'error')
         return render_template('donations.html', donations=[], pending_donations=[])
-
 
 @app.route('/donations/add', methods=['GET', 'POST'])
 @login_required
@@ -436,7 +418,6 @@ def add_donation():
     resource_types = db.get_resource_type_list()
     return render_template('add_donation.html', resource_types=resource_types)
 
-
 @app.route('/donations/allocate', methods=['GET', 'POST'])
 @login_required
 @role_required('admin', 'coordinator')
@@ -460,13 +441,23 @@ def allocate_donation():
         
         return redirect(url_for('donations'))
     
-    # Get pending donations and active camps
-    pending_donations = donation_manager.get_pending_donations()
-    camps_list = camp_manager.get_camps_summary()
-    return render_template('allocate_donation.html', 
-                         pending_donations=pending_donations, 
-                         camps=camps_list)
-
+    # GET request - show form
+    try:
+        # Get pending donations and active camps
+        pending_donations = donation_manager.get_pending_donations()
+        camps_list = camp_manager.get_camps_summary()
+        
+        # Dates are already formatted as strings by database_manager
+        # No need to format again!
+        
+        return render_template('allocate_donation.html', 
+                             pending_donations=pending_donations, 
+                             camps=camps_list)
+    except Exception as e:
+        flash(f"Error loading allocation form: {str(e)}", 'error')
+        print(f"Allocation form error: {e}")
+        return redirect(url_for('donations'))
+    
 
 @app.route('/reports')
 @login_required
@@ -490,7 +481,6 @@ def reports():
         flash(f"Error loading reports: {str(e)}", 'error')
         return render_template('reports.html')
 
-
 # ==================== API ENDPOINTS ====================
 
 @app.route('/api/dashboard-stats')
@@ -503,7 +493,6 @@ def api_dashboard_stats():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-
 @app.route('/api/disasters')
 @login_required
 def api_disasters():
@@ -513,7 +502,6 @@ def api_disasters():
         return jsonify(disasters_list)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
 
 @app.route('/api/camps')
 @login_required
@@ -525,7 +513,6 @@ def api_camps():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-
 @app.route('/api/resources')
 @login_required
 def api_resources():
@@ -535,7 +522,6 @@ def api_resources():
         return jsonify(shortages)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
 
 @app.route('/api/volunteers')
 @login_required
@@ -547,7 +533,6 @@ def api_volunteers():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-
 @app.route('/api/donations')
 @login_required
 def api_donations():
@@ -557,7 +542,6 @@ def api_donations():
         return jsonify(donations_list)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
 
 @app.route('/api/charts/disaster-types')
 @login_required
@@ -569,7 +553,6 @@ def api_charts_disaster_types():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-
 @app.route('/api/charts/resource-shortages')
 @login_required
 def api_charts_resource_shortages():
@@ -579,7 +562,6 @@ def api_charts_resource_shortages():
         return jsonify(stats['resources_by_type'])
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
 
 @app.route('/api/charts/volunteer-status')
 @login_required
@@ -594,7 +576,6 @@ def api_charts_volunteer_status():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-
 @app.route('/api/charts/donation-types')
 @login_required
 def api_charts_donation_types():
@@ -607,7 +588,6 @@ def api_charts_donation_types():
         return jsonify(donation_data)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
 
 if __name__ == '__main__':
     print("=" * 70)

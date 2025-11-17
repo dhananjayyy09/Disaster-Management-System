@@ -116,7 +116,7 @@
                                     </td>
                                     <td>{{ donation.quantity_donated }} {{ donation.unit }}</td>
                                     <td>{{ donation.donor_name }}</td>
-                                    <td>{{ donation.donation_date.strftime('%Y-%m-%d') if donation.donation_date else 'N/A' }}</td>
+                                    <td>{{ donation.donation_date[:10] }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>

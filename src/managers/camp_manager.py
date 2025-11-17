@@ -7,6 +7,7 @@ from datetime import datetime, date
 from typing import List, Dict, Optional
 from database_manager import DatabaseManager
 
+
 class CampManager:
     def __init__(self, db_manager: DatabaseManager):
         self.db = db_manager
@@ -42,7 +43,7 @@ class CampManager:
         
         for camp in camps:
             # Calculate occupancy percentage
-            occupancy_pct = (camp['current_occupancy'] / camp['capacity'] * 100) if camp['capacity'] > 0 else 0
+            occupancy_pct = (camp.get('current_occupancy', 0) / camp.get('capacity', 1) * 100) if camp.get('capacity', 0) > 0 else 0
             camp['occupancy_percentage'] = round(occupancy_pct, 1)
             
             # Determine status based on occupancy
@@ -57,7 +58,7 @@ class CampManager:
             
             # Get resource shortages for this camp
             resources = self.db.get_camp_resources(camp['camp_id'])
-            shortages = [r for r in resources if r['quantity_needed'] > r['quantity_available']]
+            shortages = [r for r in resources if r.get('quantity_needed', 0) > r.get('quantity_available', 0)]
             camp['resource_shortages'] = len(shortages)
             
         return camps
@@ -72,8 +73,8 @@ class CampManager:
             if not camp:
                 return {"success": False, "message": "Camp not found"}
             
-            if new_occupancy < 0 or new_occupancy > camp['capacity']:
-                return {"success": False, "message": f"Occupancy must be between 0 and {camp['capacity']}"}
+            if new_occupancy < 0 or new_occupancy > camp.get('capacity', 0):
+                return {"success": False, "message": f"Occupancy must be between 0 and {camp.get('capacity', 0)}"}
             
             success = self.db.update_camp_occupancy(camp_id, new_occupancy)
             
@@ -105,15 +106,27 @@ class CampManager:
             camp['volunteers'] = volunteers
             
             # Calculate resource statistics
-            total_shortages = sum(1 for r in resources if r['quantity_needed'] > r['quantity_available'])
+            total_shortages = sum(1 for r in resources if r.get('quantity_needed', 0) > r.get('quantity_available', 0))
             camp['total_shortages'] = total_shortages
             
             # Calculate days since creation
-            created_date = camp['created_at']
-            if isinstance(created_date, str):
-                created_date = datetime.strptime(created_date, '%Y-%m-%d %H:%M:%S')
-            days_active = (datetime.now() - created_date).days
-            camp['days_active'] = days_active
+            # created_at is already a string from database_manager
+            try:
+                created_date_str = camp.get('created_at', '')
+                if created_date_str:
+                    # Parse the string date
+                    if ' ' in str(created_date_str):
+                        created_date = datetime.strptime(str(created_date_str), '%Y-%m-%d %H:%M:%S')
+                    else:
+                        created_date = datetime.strptime(str(created_date_str), '%Y-%m-%d')
+                    
+                    days_active = (datetime.now() - created_date).days
+                    camp['days_active'] = days_active
+                else:
+                    camp['days_active'] = 0
+            except Exception as e:
+                print(f"Error parsing camp date: {e}")
+                camp['days_active'] = 0
             
         return camp
     
@@ -123,7 +136,10 @@ class CampManager:
         overcrowded = []
         
         for camp in camps:
-            occupancy_pct = (camp['current_occupancy'] / camp['capacity'] * 100) if camp['capacity'] > 0 else 0
+            capacity = camp.get('capacity', 0)
+            occupancy = camp.get('current_occupancy', 0)
+            occupancy_pct = (occupancy / capacity * 100) if capacity > 0 else 0
+            
             if occupancy_pct > 95:
                 camp['occupancy_percentage'] = round(occupancy_pct, 1)
                 overcrowded.append(camp)
@@ -137,7 +153,7 @@ class CampManager:
         
         for camp in camps:
             resources = self.db.get_camp_resources(camp['camp_id'])
-            shortages = [r for r in resources if r['quantity_needed'] > r['quantity_available']]
+            shortages = [r for r in resources if r.get('quantity_needed', 0) > r.get('quantity_available', 0)]
             
             if shortages:
                 camp['resource_shortages'] = shortages
@@ -149,7 +165,7 @@ class CampManager:
     def get_camp_statistics(self) -> Dict:
         """Get camp statistics for dashboard"""
         camps = self.db.get_all_camps()
-        active_camps = [c for c in camps if c['status'] == 'Active']
+        active_camps = [c for c in camps if c.get('status') == 'Active']
         
         if not active_camps:
             return {
@@ -161,11 +177,13 @@ class CampManager:
                 'overcrowded_camps': 0
             }
         
-        total_capacity = sum(camp['capacity'] for camp in active_camps)
-        total_occupancy = sum(camp['current_occupancy'] for camp in active_camps)
+        total_capacity = sum(camp.get('capacity', 0) for camp in active_camps)
+        total_occupancy = sum(camp.get('current_occupancy', 0) for camp in active_camps)
         average_occupancy = (total_occupancy / total_capacity * 100) if total_capacity > 0 else 0
         
-        overcrowded_count = len([c for c in active_camps if (c['current_occupancy'] / c['capacity'] * 100) > 95])
+        overcrowded_count = len([c for c in active_camps 
+                                if c.get('capacity', 0) > 0 and 
+                                (c.get('current_occupancy', 0) / c.get('capacity', 1) * 100) > 95])
         
         return {
             'total_camps': len(camps),

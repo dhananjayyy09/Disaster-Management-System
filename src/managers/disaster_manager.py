@@ -7,6 +7,7 @@ from datetime import datetime, date
 from typing import List, Dict, Optional
 from database_manager import DatabaseManager
 
+
 class DisasterManager:
     def __init__(self, db_manager: DatabaseManager):
         self.db = db_manager
@@ -51,13 +52,25 @@ class DisasterManager:
             disaster['camp_count'] = len(camps)
             
             # Calculate days since start
-            start_date = disaster['start_date']
-            if isinstance(start_date, str):
-                start_date = datetime.strptime(start_date, '%Y-%m-%d')
-            elif hasattr(start_date, 'date'):
-                start_date = start_date.date()
-            days_active = (datetime.now().date() - start_date).days
-            disaster['days_active'] = days_active
+            # start_date is already a string from database_manager
+            try:
+                start_date_str = disaster.get('start_date', '')
+                if start_date_str:
+                    # Parse the string date
+                    if ' ' in str(start_date_str):
+                        # Has time component
+                        start_date = datetime.strptime(str(start_date_str), '%Y-%m-%d %H:%M:%S').date()
+                    else:
+                        # Date only
+                        start_date = datetime.strptime(str(start_date_str), '%Y-%m-%d').date()
+                    
+                    days_active = (date.today() - start_date).days
+                    disaster['days_active'] = days_active
+                else:
+                    disaster['days_active'] = 0
+            except Exception as e:
+                print(f"Error parsing disaster date: {e}")
+                disaster['days_active'] = 0
             
         return disasters
     
@@ -89,8 +102,8 @@ class DisasterManager:
             disaster['camps'] = camps
             
             # Get total occupancy across all camps
-            total_occupancy = sum(camp['current_occupancy'] for camp in camps)
-            total_capacity = sum(camp['capacity'] for camp in camps)
+            total_occupancy = sum(camp.get('current_occupancy', 0) for camp in camps)
+            total_capacity = sum(camp.get('capacity', 0) for camp in camps)
             disaster['total_occupancy'] = total_occupancy
             disaster['total_capacity'] = total_capacity
             disaster['occupancy_percentage'] = (total_occupancy / total_capacity * 100) if total_capacity > 0 else 0
@@ -100,7 +113,7 @@ class DisasterManager:
     def get_active_disasters_count(self) -> int:
         """Get count of active disasters"""
         disasters = self.db.get_all_disasters()
-        return len([d for d in disasters if d['status'] == 'Active'])
+        return len([d for d in disasters if d.get('status') == 'Active'])
     
     def get_disaster_statistics(self) -> Dict:
         """Get disaster statistics for dashboard"""
@@ -108,16 +121,16 @@ class DisasterManager:
         
         stats = {
             'total_disasters': len(disasters),
-            'active_disasters': len([d for d in disasters if d['status'] == 'Active']),
-            'resolved_disasters': len([d for d in disasters if d['status'] == 'Resolved']),
+            'active_disasters': len([d for d in disasters if d.get('status') == 'Active']),
+            'resolved_disasters': len([d for d in disasters if d.get('status') == 'Resolved']),
             'by_type': {},
             'by_severity': {}
         }
         
         # Count by type
         for disaster in disasters:
-            disaster_type = disaster['disaster_type']
-            severity = disaster['severity']
+            disaster_type = disaster.get('disaster_type', 'Unknown')
+            severity = disaster.get('severity', 'Unknown')
             
             stats['by_type'][disaster_type] = stats['by_type'].get(disaster_type, 0) + 1
             stats['by_severity'][severity] = stats['by_severity'].get(severity, 0) + 1

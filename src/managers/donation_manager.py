@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import List, Dict, Optional
 from database_manager import DatabaseManager
 
+
 class DonationManager:
     def __init__(self, db_manager: DatabaseManager):
         self.db = db_manager
@@ -51,22 +52,34 @@ class DonationManager:
             )
             
             donation['allocations'] = allocations
-            donation['allocated_quantity'] = sum(a['quantity_allocated'] for a in allocations)
+            donation['allocated_quantity'] = sum(a['quantity_allocated'] for a in allocations) if allocations else 0
             donation['remaining_quantity'] = donation['quantity_donated'] - donation['allocated_quantity']
             
             # Calculate days since donation
-            donation_date = donation['donation_date']
-            if isinstance(donation_date, str):
-                donation_date = datetime.strptime(donation_date, '%Y-%m-%d %H:%M:%S')
-            days_since = (datetime.now() - donation_date).days
-            donation['days_since_donation'] = days_since
+            # donation_date is already a string from database_manager
+            try:
+                donation_date = donation.get('donation_date', '')
+                if donation_date:
+                    # Parse the string date
+                    if ' ' in str(donation_date):
+                        donation_date_obj = datetime.strptime(str(donation_date), '%Y-%m-%d %H:%M:%S')
+                    else:
+                        donation_date_obj = datetime.strptime(str(donation_date), '%Y-%m-%d')
+                    
+                    days_since = (datetime.now() - donation_date_obj).days
+                    donation['days_since_donation'] = days_since
+                else:
+                    donation['days_since_donation'] = 0
+            except Exception as e:
+                print(f"Error parsing date: {e}")
+                donation['days_since_donation'] = 0
             
         return donations
     
     def get_pending_donations(self) -> List[Dict]:
         """Get donations that are pending allocation"""
         donations = self.get_donations_summary()
-        return [d for d in donations if d['status'] == 'Pending' and d['remaining_quantity'] > 0]
+        return [d for d in donations if d['status'] in ('Pending', 'Received') and d['remaining_quantity'] > 0]
     
     def get_donation_by_id(self, donation_id: int) -> Optional[Dict]:
         """Get specific donation details"""
@@ -118,13 +131,23 @@ class DonationManager:
             stats['donations_by_type'][type_name]['quantity'] += donation['quantity_donated']
         
         # Get recent donations (last 7 days)
-        recent_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-        for donation in donations:
-            donation_date = donation['donation_date']
-            if isinstance(donation_date, str):
-                donation_date = datetime.strptime(donation_date, '%Y-%m-%d %H:%M:%S')
-            if (recent_date - donation_date).days <= 7:
-                stats['recent_donations'].append(donation)
+        try:
+            recent_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+            for donation in donations:
+                donation_date = donation.get('donation_date', '')
+                if donation_date:
+                    try:
+                        if ' ' in str(donation_date):
+                            donation_date_obj = datetime.strptime(str(donation_date), '%Y-%m-%d %H:%M:%S')
+                        else:
+                            donation_date_obj = datetime.strptime(str(donation_date), '%Y-%m-%d')
+                        
+                        if (recent_date - donation_date_obj).days <= 7:
+                            stats['recent_donations'].append(donation)
+                    except:
+                        pass
+        except Exception as e:
+            print(f"Error calculating recent donations: {e}")
         
         # Get top donors
         donor_stats = {}
@@ -141,6 +164,33 @@ class DonationManager:
                                         reverse=True)[:5])
         
         return stats
+    
+    def allocate_donation(self, donation_id: int, camp_id: int, quantity: int) -> Dict:
+        """Allocate donation to a camp"""
+        try:
+            # Get donation details
+            donation = self.get_donation_by_id(donation_id)
+            
+            if not donation:
+                return {"success": False, "message": "Donation not found"}
+            
+            if quantity > donation['remaining_quantity']:
+                return {"success": False, "message": f"Only {donation['remaining_quantity']} units available"}
+            
+            # Record allocation
+            success = self.db.allocate_donation(donation_id, camp_id, quantity)
+            
+            if success:
+                # Update donation status if fully allocated
+                if quantity == donation['remaining_quantity']:
+                    self.update_donation_status(donation_id, 'Allocated')
+                
+                return {"success": True, "message": f"Successfully allocated {quantity} units to camp"}
+            else:
+                return {"success": False, "message": "Failed to allocate donation"}
+                
+        except Exception as e:
+            return {"success": False, "message": f"Error allocating donation: {str(e)}"}
     
     def get_allocation_summary(self) -> List[Dict]:
         """Get summary of donation allocations"""
@@ -195,5 +245,5 @@ class DonationManager:
             'daily_trends': trends,
             'total_days': len(trends),
             'average_daily_donations': len(trends) / 30 if trends else 0,
-            'total_donations_period': sum(t['total_quantity'] for t in trends)
+            'total_donations_period': sum(t['total_quantity'] for t in trends) if trends else 0
         }

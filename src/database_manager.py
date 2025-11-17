@@ -6,6 +6,8 @@ Handles all database operations and connections
 import mysql.connector
 from mysql.connector import Error
 from typing import List, Dict, Tuple, Optional
+from datetime import datetime, date
+
 
 class DatabaseManager:
     def __init__(self, host='localhost', user='root', password='DJdjdj12', database='disaster_relief_db'):
@@ -14,7 +16,17 @@ class DatabaseManager:
         self.password = password
         self.database = database
         self.connection = None
-        
+    
+    def _convert_datetime_to_string(self, results: List[Dict]) -> List[Dict]:
+        """Convert datetime objects to strings for JSON serialization"""
+        for row in results:
+            for key, value in row.items():
+                if isinstance(value, datetime):
+                    row[key] = value.strftime('%Y-%m-%d %H:%M:%S')
+                elif isinstance(value, date):
+                    row[key] = value.strftime('%Y-%m-%d')
+        return results
+    
     def connect(self):
         """Establish database connection"""
         try:
@@ -57,6 +69,10 @@ class DatabaseManager:
             cursor.execute(query, params)
             results = cursor.fetchall()
             cursor.close()
+            
+            # Convert datetime objects to strings
+            results = self._convert_datetime_to_string(results)
+            
             return results
         except Error as e:
             print(f"Error executing query: {e}")
@@ -77,6 +93,26 @@ class DatabaseManager:
         except Error as e:
             print(f"Error executing update: {e}")
             self.connection.rollback()
+            return False
+    
+    def commit(self):
+        """Commit the current transaction"""
+        try:
+            if self.connection:
+                self.connection.commit()
+                return True
+        except Error as e:
+            print(f"Error committing transaction: {e}")
+            return False
+    
+    def rollback(self):
+        """Rollback the current transaction"""
+        try:
+            if self.connection:
+                self.connection.rollback()
+                return True
+        except Error as e:
+            print(f"Error rolling back transaction: {e}")
             return False
     
     # Disaster Management Methods
@@ -258,6 +294,10 @@ class DatabaseManager:
         # Critical shortages
         shortages = self.execute_query("SELECT COUNT(*) as count FROM resources WHERE quantity_needed > quantity_available")
         summary['critical_shortages'] = shortages[0]['count'] if shortages else 0
+        
+        # Total donations
+        donations = self.execute_query("SELECT COUNT(*) as count FROM donations")
+        summary['total_donations'] = donations[0]['count'] if donations else 0
         
         return summary
     
