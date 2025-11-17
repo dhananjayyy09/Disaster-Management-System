@@ -17,216 +17,152 @@ The Disaster Relief Management System uses a normalized relational database desi
 │ severity        │     │ capacity         │     │ quantity_needed │
 │ start_date      │     │ current_occupancy│     │ last_updated    │
 │ end_date        │     │ contact_person   │     └─────────────────┘
-│ status          │     │ contact_phone    │              │
-│ description     │     │ status           │              │
-│ created_at      │     │ created_at       │              │
-└─────────────────┘     └──────────────────┘              │
-         │                        │                       │
-         │                        │                       │
-         │              ┌──────────────────┐              │
-         │              │ VOLUNTEER_ASSIGN │              │
-         │              │                  │              │
-         │              ├──────────────────┤              │
-         │              │ assignment_id(PK)│              │
-         │              │ volunteer_id (FK)│              │
-         │              │ camp_id (FK)     │              │
-         │              │ role             │              │
-         │              │ start_date       │              │
-         │              │ end_date         │              │
-         │              │ status           │              │
-         │              └──────────────────┘              │
-         │                        │                       │
-         │                        │                       │
-┌─────────────────┐               │              ┌─────────────────┐
-│   VOLUNTEERS    │◄──────────────┘              │ RESOURCE_TYPES  │
-├─────────────────┤                              ├─────────────────┤
-│ volunteer_id(PK)│                              │ resource_type_id│
-│ first_name      │                              │ type_name       │
-│ last_name       │                              │ unit            │
-│ email           │                              │ description     │
-│ phone           │                              └─────────────────┘
-│ skills          │                                       │
-│ availability    │                                       │
-│ registration_dt │                                       │
-└─────────────────┘                                       │
-                                                          │
-┌─────────────────┐              ┌─────────────────┐      │
-│   DONATIONS     │              │DONATION_ALLOCAT │      │
-├─────────────────┤              ├─────────────────┤      │
-│ donation_id (PK)│◄─────────────┤ allocation_id(PK)│      │
-│ donor_name      │              │ donation_id (FK)│      │
-│ donor_contact   │              │ camp_id (FK)    │      │
-│ resource_type_id│──────────────┤ quantity_alloc  │      │
-│ quantity_donated│              │ allocation_date │      │
-│ donation_date   │              │ status          │      │
-│ status          │              └─────────────────┘      │
-│ notes           │                                       │
-└─────────────────┘                                       │
-                                                          │
-                                                          │
-                                              ┌─────────────────┐
-                                              │ RELIEF_CAMPS    │
-                                              │ (Referenced)    │
-                                              └─────────────────┘
-```
+│ status          │     │ contact_phone    │          │
+│ description     │     │ status           │          │
+│ created_at      │     │ created_at       │          │
+└─────────────────┘     └──────────────────┘          │
+       │                      │                       │
+       │                      │                       │
+       │            ┌──────────────────┐              │
+       │            │ VOLUNTEER_ASSIGN │              │
+       │            │                  │              │
+       │            ├──────────────────┤              │
+       │            │ assignment_id PK │              │
+       │            │ volunteer_id FK  │              │
+       │            │ camp_id FK       │              │
+       │            │ role             │              │
+       │            │ start_date       │              │
+       │            │ end_date         │              │
+       │            │ status           │              │
+       │            └──────────────────┘              │
+       │                       │                      │
+       │                       │                      │
+┌─────────────────┐            │                ┌─────────────────┐
+│   VOLUNTEERS    │◄───────────┘                │ RESOURCE_TYPES  │
+├─────────────────┤                             ├─────────────────┤
+│ volunteer_id(PK)│                             │ resource_type_id│
+│ first_name      │                             │ type_name       │
+│ last_name       │                             │ unit            │
+│ email           │                             │ description     │
+│ phone           │                             └─────────────────┘
+│ skills          │                                      │
+│ availability    │                                      │
+│ registration_dt │                                      │
+└─────────────────┘                                      │
+                                                         │
+┌─────────────────┐           ┌─────────────────┐        │
+│   DONATIONS     │           │DONATION_ALLOCAT │        │
+├─────────────────┤           ├─────────────────┤        │
+│ donation_id (PK)│◄──────────┤ allocation_id PK│        │
+│ donor_name      │           │ donation_id (FK)│        │
+│ donor_contact   │           │ camp_id (FK)    │        │
+│ resource_type_id│───────────┤ quantity_alloc  │        │
+│ quantity_donated│           │ allocation_date │        │
+│ donation_date   │           │ status          │        │
+│ status          │           └─────────────────┘        │
+│ notes           │                                      │
+└─────────────────┘                                      │
+                                                         │
+                                                         │
+                                                         ▼
+
+Backup Tables:
+
+┌───────────────────────┐     ┌─────────────────────────┐
+│   disasters_backup    │     │   relief_camps_backup    │
+│ (same columns +       │     │ (same columns +          │
+│  backup_timestamp,    │     │  backup_timestamp,       │
+│  backup_action)       │     │  backup_action)          │
+└───────────────────────┘     └─────────────────────────┘
+
+┌───────────────────────┐     ┌─────────────────────────────┐
+│  resources_backup     │     │volunteer_assignments_backup │
+│ (same columns +       │     │ (same columns +             │
+│  backup_timestamp,    │     │  backup_timestamp,          │
+│  backup_action)       │     │  backup_action)             │
+└───────────────────────┘     └─────────────────────────────┘
+
+┌───────────────────────┐     ┌─────────────────────────┐
+│   volunteers_backup   │     │    donations_backup     │
+│ (same columns +       │     │ (same columns +         │
+│  backup_timestamp,    │     │  backup_timestamp,      │
+│  backup_action)       │     │  backup_action)         │
+└───────────────────────┘     └─────────────────────────┘
+
+---
 
 ## Table Relationships
 
-### 1. DISASTERS ↔ RELIEF_CAMPS (One-to-Many)
-- **Relationship**: One disaster can have multiple relief camps
-- **Foreign Key**: `relief_camps.disaster_id` → `disasters.disaster_id`
-- **Business Rule**: Each camp must be associated with exactly one disaster
+1. **DISASTERS ↔ RELIEF_CAMPS (One-to-Many)**
+    - One disaster has many relief camps.
+    - Foreign key: `relief_camps.disaster_id` references `disasters.disaster_id`.
+   
+2. **RELIEF_CAMPS ↔ RESOURCES (One-to-Many)**
+    - One camp has many resource entries.
+    - Foreign key: `resources.camp_id` references `relief_camps.camp_id`.
+   
+3. **RELIEF_CAMPS ↔ VOLUNTEER_ASSIGNMENTS (One-to-Many)**
+    - One camp has many volunteer assignments.
+    - Foreign keys: `volunteer_assignments.camp_id` → `relief_camps.camp_id`
+   
+4. **VOLUNTEERS ↔ VOLUNTEER_ASSIGNMENTS (One-to-Many)**
+    - One volunteer may have multiple assignments.
+    - Foreign key: `volunteer_assignments.volunteer_id` references `volunteers.volunteer_id`.
+   
+5. **RESOURCE_TYPES ↔ RESOURCES (One-to-Many)**
+    - One resource type applies to many resources.
+    - Foreign key: `resources.resource_type_id` → `resource_types.resource_type_id`
+   
+6. **RESOURCE_TYPES ↔ DONATIONS (One-to-Many)**
+    - One resource type can have many donations.
+    - Foreign key: `donations.resource_type_id` → `resource_types.resource_type_id`
+   
+7. **DONATIONS ↔ DONATION_ALLOCATIONS (One-to-Many)**
+    - One donation can be allocated to multiple camps.
+    - Foreign key: `donation_allocations.donation_id` → `donations.donation_id`
+   
+8. **RELIEF_CAMPS ↔ DONATION_ALLOCATIONS (One-to-Many)**
+    - One camp can receive multiple donation allocations.
+    - Foreign key: `donation_allocations.camp_id` → `relief_camps.camp_id`
 
-### 2. RELIEF_CAMPS ↔ RESOURCES (One-to-Many)
-- **Relationship**: One camp can have multiple resource entries
-- **Foreign Key**: `resources.camp_id` → `relief_camps.camp_id`
-- **Business Rule**: Each resource entry belongs to exactly one camp
-
-### 3. RELIEF_CAMPS ↔ VOLUNTEER_ASSIGNMENTS (One-to-Many)
-- **Relationship**: One camp can have multiple volunteer assignments
-- **Foreign Key**: `volunteer_assignments.camp_id` → `relief_camps.camp_id`
-- **Business Rule**: Volunteers can be assigned to multiple camps over time
-
-### 4. VOLUNTEERS ↔ VOLUNTEER_ASSIGNMENTS (One-to-Many)
-- **Relationship**: One volunteer can have multiple assignments
-- **Foreign Key**: `volunteer_assignments.volunteer_id` → `volunteers.volunteer_id`
-- **Business Rule**: Each assignment belongs to exactly one volunteer
-
-### 5. RESOURCE_TYPES ↔ RESOURCES (One-to-Many)
-- **Relationship**: One resource type can be used in multiple camps
-- **Foreign Key**: `resources.resource_type_id` → `resource_types.resource_type_id`
-- **Business Rule**: Each resource entry must have a defined type
-
-### 6. RESOURCE_TYPES ↔ DONATIONS (One-to-Many)
-- **Relationship**: One resource type can have multiple donations
-- **Foreign Key**: `donations.resource_type_id` → `resource_types.resource_type_id`
-- **Business Rule**: Each donation must specify what type of resource is donated
-
-### 7. DONATIONS ↔ DONATION_ALLOCATIONS (One-to-Many)
-- **Relationship**: One donation can be allocated to multiple camps
-- **Foreign Key**: `donation_allocations.donation_id` → `donations.donation_id`
-- **Business Rule**: Donations can be split across multiple camps
-
-### 8. RELIEF_CAMPS ↔ DONATION_ALLOCATIONS (One-to-Many)
-- **Relationship**: One camp can receive multiple donation allocations
-- **Foreign Key**: `donation_allocations.camp_id` → `relief_camps.camp_id`
-- **Business Rule**: Each allocation goes to exactly one camp
+---
 
 ## Key Constraints and Business Rules
 
-### Primary Keys
-- All tables have auto-incrementing primary keys
-- Ensures unique identification of all records
+- All tables have auto-increment primary keys ensuring uniqueness.
+- Foreign key constraints enforce data integrity; cascading deletes are applied where appropriate (e.g., deleting a disaster deletes its camps).
+- Unique constraints ensure no duplicated entries for volunteers' emails and resource type names.
+- Check constraints limit values (e.g., disaster types, severity levels, status).
+- Default timestamps and status values used to track creation and updates.
+- Backup tables mirror core tables with additional columns `backup_timestamp` and `backup_action` for audit trails.
 
-### Foreign Key Constraints
-- **CASCADE DELETE**: Deleting a disaster removes all associated camps
-- **RESTRICT DELETE**: Cannot delete resource types with existing resources/donations
-- **Data Integrity**: Ensures referential integrity across all relationships
-
-### Unique Constraints
-- **Volunteer Email**: Each volunteer must have a unique email address
-- **Resource Type Name**: Each resource type must have a unique name
-
-### Check Constraints
-- **Disaster Types**: Must be one of: Earthquake, Flood, Wildfire, Hurricane, Tornado, Other
-- **Severity Levels**: Must be one of: Low, Medium, High, Critical
-- **Status Values**: Each table has predefined status values
-- **Non-negative Quantities**: Resource quantities cannot be negative
-
-### Default Values
-- **Timestamps**: Created_at fields default to current timestamp
-- **Status Fields**: Default to appropriate initial status
-- **Occupancy**: Default to 0 for new camps
+---
 
 ## Indexes for Performance
 
-### Primary Indexes
-- All primary keys are automatically indexed
+- Primary keys are indexed automatically.
+- Foreign keys related to disaster, camp, volunteer, resource type, donation efficiently indexed.
+- Additional indexes on status, disaster type, availability status, and donation date optimize query speed.
 
-### Foreign Key Indexes
-- `disaster_id` in relief_camps
-- `camp_id` in resources and volunteer_assignments
-- `volunteer_id` in volunteer_assignments
-- `resource_type_id` in resources and donations
-- `donation_id` in donation_allocations
-
-### Query Optimization Indexes
-- `status` fields for filtering active records
-- `disaster_type` for disaster categorization
-- `availability_status` for volunteer filtering
-- `donation_date` for temporal queries
+---
 
 ## Data Flow and Operations
 
-### 1. Disaster Management Flow
+- Disaster → Camps → Volunteers → Resources flow allows effective tracking of relief operations.
+- Donations collected and allocated to camps as per requirement.
+- Backup tables automatically updated by triggers on every change.
+- Reports aggregated from core tables assist decision making.
+
+---
+
+## Scalability
+
+- Database design supports horizontal (partitioning) and vertical (indexing) scaling.
+- Archive tables planned for older data.
+- Triggers and backups ensure reliability and disaster recovery readiness.
+
+---
+
+This ER diagram documentation now accurately reflects your current database and backup design, supporting full disaster relief lifecycle management with robust data integrity and audit capabilities.
+
 ```
-Create Disaster → Create Relief Camps → Assign Volunteers → Track Resources
-```
-
-### 2. Resource Management Flow
-```
-Record Donations → Detect Shortages → Allocate Resources → Update Inventories
-```
-
-### 3. Volunteer Management Flow
-```
-Register Volunteers → Assign to Camps → Track Performance → Update Availability
-```
-
-### 4. Reporting Flow
-```
-Aggregate Data → Generate Statistics → Create Reports → Export Data
-```
-
-## Sample Data Relationships
-
-### Example: Earthquake Disaster Scenario
-```
-Earthquake (ID: 1)
-├── North Relief Center (ID: 1)
-│   ├── Food Resources (Available: 150, Needed: 200)
-│   ├── Water Resources (Available: 500, Needed: 800)
-│   └── Volunteer Assignments
-│       └── Alice Williams (Medical Coordinator)
-├── South Emergency Camp (ID: 2)
-│   ├── Medical Supplies (Available: 50, Needed: 100)
-│   └── Volunteer Assignments
-│       └── Bob Johnson (Logistics Manager)
-└── Donations
-    ├── Red Cross Food Donation (1000 kg) → Allocated to Camps
-    └── Medical Foundation Supplies (200 units) → Pending Allocation
-```
-
-## Normalization Benefits
-
-### 1NF (First Normal Form)
-- All attributes contain atomic values
-- No repeating groups or arrays
-
-### 2NF (Second Normal Form)
-- All non-key attributes fully dependent on primary key
-- Eliminates partial dependencies
-
-### 3NF (Third Normal Form)
-- No transitive dependencies
-- All non-key attributes dependent only on primary key
-
-### BCNF (Boyce-Codd Normal Form)
-- Every determinant is a candidate key
-- Eliminates anomalies in data modification
-
-## Scalability Considerations
-
-### Horizontal Scaling
-- Database can be partitioned by disaster_id or region
-- Read replicas for reporting queries
-
-### Vertical Scaling
-- Additional indexes for large datasets
-- Query optimization for complex joins
-
-### Data Archiving
-- Historical data can be moved to archive tables
-- Maintains performance for active operations
-
-This ER design provides a solid foundation for the Disaster Relief Management System, ensuring data integrity, performance, and scalability for real-world disaster relief operations.
