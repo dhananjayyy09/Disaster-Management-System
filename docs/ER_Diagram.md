@@ -6,6 +6,7 @@ The Disaster Relief Management System uses a normalized relational database desi
 
 ## Entity-Relationship Diagram
 
+```
 ┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
 │   DISASTERS     │     │   RELIEF_CAMPS   │     │   RESOURCES     │
 ├─────────────────┤     ├──────────────────┤     ├─────────────────┤
@@ -86,7 +87,7 @@ Backup Tables:
 │  backup_timestamp,    │     │  backup_timestamp,      │
 │  backup_action)       │     │  backup_action)         │
 └───────────────────────┘     └─────────────────────────┘
- 
+``` 
 
 ## Table Relationships
 
