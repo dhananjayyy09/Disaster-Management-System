@@ -1,7 +1,7 @@
 # Disaster Relief Management System
 
 A comprehensive database-driven system for managing disaster relief operations, including disaster tracking, relief camp management, resource allocation, volunteer coordination, and donation tracking. 
-
+ 
 ## 🎯 Project Overview
 
 This system addresses the critical need for efficient disaster relief management by providing:
